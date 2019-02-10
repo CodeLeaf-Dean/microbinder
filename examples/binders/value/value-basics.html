@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The value binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>The value binder sets the value property of the element. This is most commonly used for input elements that use the value attribute. In the examplpe below we are binding to a text input amd a date input. The date input required an iso date string value, so we have added a property to the class to handle this conversion.</p>
+
+    <template id="template1">
+        <input type=text bind="{value: ()=>this.firstName}" /> 
+        <input type=text bind="{value: ()=>this.lastName}" />
+        <input type=date bind="{value: ()=>this.isoDate}" />
+
+        <label bind="{text: ()=>this.firstName}"></label>
+        <label bind="{text: ()=>this.lastName}"></label>
+        <label bind="{text: ()=>this.date}"></label>
+    </template>
+
+    <script>
+        class Person {
+            constructor() {
+                this.firstName = 'Micro';
+                this.lastName = 'Binder';
+                this.date = new Date();
+            }
+            get isoDate()
+            {
+                return this.date.toISOString().split('T')[0];
+            }
+            set isoDate(v)
+            {
+                this.date = new Date(v);
+            }
+        }
+        mb.render(new Person(), document.body, "template1");
+    </script>
+  </body>
+</html>

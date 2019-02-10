@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The foreach binder - array remove</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p></p>
+
+    <template id="template1">
+        <h2>ReadOnly List</h2>
+        <ul bind="{foreach: ()=>this.people}">
+            <li>
+                <label type=text bind="{text: ()=>this.firstName}"></label>
+                <label type=text bind="{text: ()=>this.lastName}"></label>
+                <button bind="{click: ()=>$parent.people.splice($index(),1)}">Remove</button>
+            </li>
+        </ul>
+    </template>
+
+    <script>
+        class PeopleModel {
+            constructor() {
+                this.people = [
+                    { firstName:'Micro', lastName:'Binder' },
+                    { firstName:'John', lastName:'Smith' },
+                    { firstName:'Jane', lastName:'Doe' }
+                ];
+            }
+        }
+        mb.render(new PeopleModel(), document.body, "template1");
+    </script>
+  </body>
+</html>

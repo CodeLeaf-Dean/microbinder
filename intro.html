@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <script type="text/javascript" src="build/mb.js"></script>
+    </head>
+    <body>
+        <template id="t1">
+            <input type=text bind="{value: ()=>this.firstName}" /> 
+            <input type=text bind="{value: ()=>this.lastName}" />
+            <label bind="{text: ()=>this.firstName}"></label>
+            <label bind="{text: ()=>this.lastName}"></label>
+        </template>
+        <script>
+            class Person {
+                constructor() {
+                    this.firstName = 'Micro';
+                    this.lastName = 'Binder';
+                }
+            }
+            mb.render(new Person(), document.body, 't1');
+        </script>
+    </body>
+</html>

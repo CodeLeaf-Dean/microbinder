@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+    <script type="text/javascript" src="mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>microbinder.js</h1>
+    <p>Welcome to microbinder. A small javascript to html binding module. Everything you need to do most binding tasks in under 6kb. (2k gzipped!)</p>
+    <h2>What does microbinder actually do?</h2>
+    <p>microbinder takes a javascript object and allows you to bind its properties to your DOM through the use of templates and the bind attribute.</p>
+    <p>Here is a quick example. Lets say you have a javascript object with a firstName and lastName property and you want to bind to 2 input elements and 2 labels. Your class could look like this...</p>
+<textarea disabled rows=5 cols=70>
+class Person{
+  constructor() {
+  this.firstName = 'Micro';
+  this.lastName = 'Binder';
+}</textarea>
+
+    <p>and your html could look like this...</p>
+
+    <textarea disabled rows=4 cols=70><input type=text bind="{value: ()=>this.firstName}" /> 
+<input type=text bind="{value: ()=>this.lastName}" />
+<label bind="{text: ()=>this.firstName}"></label>
+<label bind="{text: ()=>this.lastName}"></label></textarea>
+
+    <p>Notice the bind attribute. This always has to return an object. The properties on this object are the bindings to use. In this example we are using the text and value bindings. Every binding must be a function that returns the value to bind.</p>
+    <p>We will put our html into a template element, our class in a script element, include the mb.js file, and finally call the mb.render() method. Our final document will look like this...</p>
+
+    <textarea disabled rows=24 cols=70>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <script type="text/javascript" src="mb.js"></script>
+    </head>
+    <body>
+        <template id="t1">
+            <input type=text bind="{value: ()=>this.firstName}" /> 
+            <input type=text bind="{value: ()=>this.lastName}" />
+            <label bind="{text: ()=>this.firstName}"></label>
+            <label bind="{text: ()=>this.lastName}"></label>
+        </template>
+        <script>
+            class Person {
+                constructor() {
+                    this.firstName = 'Micro';
+                    this.lastName = 'Binder';
+                }
+            }
+            mb.render(new Person(), document.body, 't1');
+        </script>
+    </body>
+</html></textarea>
+
+    <p>This gives us the result below. Changing the values in the text inputs should update the text of the labels.</p>
+    <iframe src="intro.html" width=457 height=38></iframe>
+
+    <p>That's the basics covered, checkout the <a href="examples.html">examples</a> page to learn more!</p>
+  </body>
+</html>
