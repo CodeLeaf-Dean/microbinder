@@ -1,3 +1,5 @@
+//mb.bindObjects = [function($element,$data,$index,$parent,$root){return {value: ()=>this.firstName}}];
+
 class MicroBinder {
     constructor() {
         this._nextBindingId = 1;
@@ -57,6 +59,19 @@ class MicroBinder {
                 e.insertFunc = insertFunc;
                 arr.forEach(insertFunc);
                 return true;
+            },
+            event:(e,m,js)=>{
+                // Add a binding for each event
+                for (const key in js) {
+                    const element = js[key];
+                    e.addEventListener(key, (event) => element.call(m, e));
+                }
+            },
+            enable:(e,m,js)=>{
+                mb.bind(m, js, (v) => !v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
+            },
+            disable:(e,m,js)=>{
+                mb.bind(m, js, (v) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
             }
         }
     }
@@ -226,10 +241,22 @@ class ObjectHandler {
         }
     }
 
+    /*unsubscribe(prop, triggerFunc, eventFunc){
+        if(this.subscribers[prop] != null){
+            this.subscribers[prop].forEach((x,i,a)=>{
+                if(x.triggerFunc == triggerFunc && x.eventFunc == eventFunc){
+                    a.splice(i,1);
+                    return;
+                }
+            });
+        }
+    }*/
+    
     get(obj, prop, proxy) {
         if(prop === "proxyHandler") return this;
         if(prop === "isProxy") return true;
         if(prop === "proxyObject") return obj;
+        //if(prop === "subscribe") return this._subscribe;
         var val = Reflect.get(obj, prop, proxy);
         
         if(mb._calculatingDependancies){

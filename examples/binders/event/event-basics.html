@@ -6,23 +6,28 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>Render using a template script type=html/text element</h1>
+    <h1>The event binder</h1>
     <p>
         <a href="/examples.html">Back to examples</a>
     </p>
 
-    <script type="html/text" id="template1">
-        <input type=text bind="{value: ()=>this.firstName}" /> 
-        <input type=text bind="{value: ()=>this.lastName}" />
-        <label bind="{text: ()=>this.firstName}"></label>
-        <label bind="{text: ()=>this.lastName}"></label>
-    </script>
+    <p>The event binder adds event listeners to the element. 
+        Unlike most bindings, the event binding requires an object rather than a function. 
+        Each property on the object must be a function. An event listener matching the property name is added to the element with a
+         handler that matches the properties function.</p>
+
+
+    <template id="template1">
+        <input type="button" value="click me" bind="{event:{click:()=>this.showAlert()}}"/>
+    </template>
 
     <script>
         class Person {
             constructor() {
-                this.firstName = 'Dean';
-                this.lastName = 'North';
+                this.isChecked = true;
+            }
+            showAlert(){
+                alert('button was clicked');
             }
         }
         mb.render(new Person(), document.body, "template1");

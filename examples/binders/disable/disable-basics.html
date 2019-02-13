@@ -6,23 +6,24 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>Render using a template script type=html/text element</h1>
+    <h1>The disable binder</h1>
     <p>
         <a href="/examples.html">Back to examples</a>
     </p>
 
-    <script type="html/text" id="template1">
-        <input type=text bind="{value: ()=>this.firstName}" /> 
-        <input type=text bind="{value: ()=>this.lastName}" />
-        <label bind="{text: ()=>this.firstName}"></label>
-        <label bind="{text: ()=>this.lastName}"></label>
-    </script>
+    <p>The disable binder will add the disabled attribute if the bind function returns true and will remove it if it returns false.</p>
+
+    <template id="template1">
+        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
+        <input type="text" bind="{disable:()=>this.isChecked}"/>
+        <p>The checkbox state is <span bind="{text: ()=>this.isChecked}"></span></p>
+        
+    </template>
 
     <script>
         class Person {
             constructor() {
-                this.firstName = 'Dean';
-                this.lastName = 'North';
+                this.isChecked = true;
             }
         }
         mb.render(new Person(), document.body, "template1");
