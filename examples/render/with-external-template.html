@@ -22,7 +22,19 @@
                 this.lastName = 'North';
             }
         }
-        mb.render(new Person(), document.body, "template1");
+        
+        var loadExternalTemplate = function(script, model, rootElement)
+        {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET",script.src)
+            xhr.onreadystatechange = function () {
+                if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                mb.render(model, rootElement, xhr.responseText);
+                }
+            };
+            xhr.send();
+        }
+        loadExternalTemplate(document.getElementById("template1"), new Person(), document.body);
     </script>
   </body>
 </html>

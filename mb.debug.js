@@ -136,6 +136,19 @@ class MicroBinder {
         } 
     }
 
+    /*loadExternalTemplate(script, model, rootElement, index, parent)
+    {
+      var mb = this;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET",script.src)
+      xhr.onreadystatechange = function () {
+        if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+          mb.render(model, rootElement, xhr.responseText, index, parent);
+        }
+      };
+      xhr.send();
+    }*/
+
     render(model, target, template, index, parent){
         var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
         
