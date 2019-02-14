@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The with binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>The with binder renders its children using the model returned by the function.</p>
+
+    <template id="template1">
+        <div bind="{with:()=>{return {name:'inline object'}}}">
+            <h2 bind="{text:()=>this.name}"></h2>
+        </div>
+
+        <div bind="{with:()=>this.subObject}">
+            <h2 bind="{text:()=>this.name}"></h2>
+        </div>
+    </template>
+
+    <script>
+        class Model {
+            constructor() {
+                this.subObject = {name:"sub object"};
+            }
+        }
+        mb.render(new Model(), document.body, "template1");
+    </script>
+  </body>
+</html>

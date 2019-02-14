@@ -56,6 +56,15 @@ class MicroBinder {
                 });
                 return true;
             },
+            with: (e, m, js) => {
+                var subTemplate = e.innerHTML;
+                e.innerHTML = "";
+                mb.bind(m, js, (v) => {
+                    e.innerHTML = "";
+                    mb.render(v, e, subTemplate);
+                });
+                return true;
+            },
             foreach: (e, m, js)=>{ 
                 var subTemplate = e.innerHTML;
                 e.innerHTML = "";
