@@ -44,6 +44,18 @@ class MicroBinder {
             },
             visible: (e, m, js)=> mb.bind(m, js, (v) => e.style.display = v ? null : "none"),
             click: (e, m, js)=> e.addEventListener("click", (event) => js.call(m, e)),
+            if: (e, m, js) => {
+                var subTemplate = e.innerHTML;
+                e.innerHTML = "";
+                mb.bind(m, js, (v) => {
+                    if(v){
+                        mb.render(m, e, subTemplate);
+                    } else {
+                        e.innerHTML = "";
+                    }
+                });
+                return true;
+            },
             foreach: (e, m, js)=>{ 
                 var subTemplate = e.innerHTML;
                 e.innerHTML = "";

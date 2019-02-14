@@ -6,17 +6,17 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>The visible binder</h1>
+    <h1>The if binder</h1>
     <p>
         <a href="/examples.html">Back to examples</a>
     </p>
 
-    <p>The visible binder toggles the display:none style attribute of the element. This is used to show/hide content based on logic in your app. The example below toggles the h2 tag when you check the checkbox.</p>
+    <p>The if binder stops rendering the child nodes if the function returns false. This is used to add/remove content based on logic in your app. The example below toggles the h2 tag when you check the checkbox.</p>
 
     <template id="template1">
         <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
 
-        <h2 bind="{visible:()=>this.isChecked}">Click the checkbox to toggle me</h2>
+        <h2 bind="{if:()=>this.isChecked}">Click the checkbox to toggle me</h2>
         
     </template>
 
