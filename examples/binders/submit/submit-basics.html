@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The submit binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>The submit binder adds a submit event handler that calls the bind function.</p>
+
+    <template id="template1">
+        <form bind="{submit: ()=>this.validateForm()}">
+        <input type="text" name="firstName" bind="{value:()=>this.firstName}"/>
+        <input type="submit" value="submit" />
+    </template>
+
+    <script>
+        class Person {
+            constructor() {
+                this.firstName;
+            }
+            validateForm(){
+                if(this.firstName == null)
+                    alert('firstName is required');
+            }
+        }
+        mb.render(new Person(), document.body, "template1");
+    </script>
+  </body>
+</html>

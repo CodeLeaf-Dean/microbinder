@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The hasFocus binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>The hasFocus binder toggles the focus of the element.</p>
+
+    <template id="template1">
+        <input type="text" bind="{hasFocus:()=>this.isSelected}"/>
+
+        <p>Does textbox have focus? <span bind="{text: ()=>this.isSelected}"></span></p>
+        
+        <button bind="{click:()=>this.isSelected = true}">Set focus programatically</button>
+    </template>
+
+    <script>
+        class Person {
+            constructor() {
+                this.isSelected = false;
+            }
+        }
+        mb.render(new Person(), document.body, "template1");
+    </script>
+  </body>
+</html>

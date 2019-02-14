@@ -11,8 +11,12 @@ class MicroBinder {
             text:(e, m, js)=>mb.bind(m, js, (v) => e.innerText = v),
             html:(e, m, js)=>mb.bind(m, js, (v) => e.innerHTML = v),
             value:(e, m, js)=>{
-                mb.bind(m, js, (v) => e.value = v);
+                mb.bind(m, js, (v) => e.value = v||'');
                 e.addEventListener("change", (event) => mb.setValue(m, js, event.target.value));
+            },
+            textInput:(e, m, js)=>{
+                mb.bind(m, js, (v) => e.value = v||'');
+                e.addEventListener("input", (event) => mb.setValue(m, js, event.target.value));
             },
             checked:(e, m, js)=>{
                 mb.bind(m, js, (v) => {
@@ -20,6 +24,11 @@ class MicroBinder {
                     else e.removeAttribute("checked","")
                 });
                 e.addEventListener("change", (event) => mb.setValue(m, js, event.target.checked));
+            },
+            hasFocus:(e, m, js)=>{
+                mb.bind(m, js, (v) => v ? e.focus() : e.blur());
+                e.addEventListener("focus", (event) => mb.setValue(m, js, true));
+                e.addEventListener("blur", (event) => mb.setValue(m, js, false));
             },
             css:(e,m,js)=>{
                 // Add a binding for each css class
@@ -44,6 +53,7 @@ class MicroBinder {
             },
             visible: (e, m, js)=> mb.bind(m, js, (v) => e.style.display = v ? null : "none"),
             click: (e, m, js)=> e.addEventListener("click", (event) => js.call(m, e)),
+            submit: (e, m, js)=> e.addEventListener("submit", (event) => js.call(m, e)),
             if: (e, m, js) => {
                 var subTemplate = e.innerHTML;
                 e.innerHTML = "";
