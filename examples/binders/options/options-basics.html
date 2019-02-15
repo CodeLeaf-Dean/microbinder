@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The options binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>Unlike knockout, there is no options binder. To bind to select elements, use a foreach and value binder.</p>
+
+    <template id="template1">
+        <select bind="{foreach:()=>this.genders,value:()=>this.gender}">
+            <option bind="{text:()=>this.text,value:()=>this.value}"></option>
+        </select>
+
+        <p>Selected option value is <span bind="{text:()=>this.gender}"></span></p>
+    </template>
+
+    <script>
+        class Person {
+            constructor() {
+                this.genders = [
+                    {text:'Male',value:'1'},
+                    {text:'Female',value:'2'},
+                    {text:'Other',value:'3'}
+                ];
+                this.gender = 3;
+            }
+        }
+        mb.render(new Person(), document.body, "template1");
+    </script>
+  </body>
+</html>

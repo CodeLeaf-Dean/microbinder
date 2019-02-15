@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>The selectedOptions binder</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p></p>
+
+    <template id="template1">
+        <select multiple size="5" bind="{foreach:()=>this.food,selectedOptions:()=>this.selectedFood}">
+            <option bind="{text:()=>this.text,value:()=>this.value}"></option>
+        </select>
+
+        <p>Selected options are: 
+            <ul bind="{foreach:()=>this.selectedFood}">
+                <li bind="{text:()=>this}"></li>
+            </ul>
+        </p>
+
+        <button bind="{click:()=>this.selectedFood = [1,4]}">Set selected options to pizza and burger</button>
+    </template>
+
+    <script>
+        class Person {
+            constructor() {
+                this.food = [
+                    {text:'Pizza',value:'1'},
+                    {text:'Pasta',value:'2'},
+                    {text:'Stew',value:'3'},
+                    {text:'Burger',value:'4'},
+                    {text:'Chips',value:'5'}
+                ];
+                this.selectedFood = [];
+            }
+        }
+        mb.render(new Person(), document.body, "template1");
+    </script>
+  </body>
+</html>

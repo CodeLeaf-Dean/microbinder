@@ -91,6 +91,16 @@ class MicroBinder {
                 arr.forEach(insertFunc);
                 return true;
             },
+            selectedOptions:(e,m,js)=>{
+                mb.bind(m, js, (v) => {
+                    var vs = v.map(s=>s.toString());
+                    Array.from(e.options).forEach(o=>o.selected = vs.indexOf(o.value)>-1);
+                });
+                e.addEventListener("change", (event) => {
+                    var selectedOptions = Array.from(event.target.selectedOptions).map((x)=>x.value);
+                    mb.setValue(m, js, selectedOptions);
+                });
+            },
             event:(e,m,js)=>{
                 // Add a binding for each event
                 for (const key in js) {
@@ -333,9 +343,11 @@ class ObjectHandler {
 
             // If we are replacing an entire array, treat it as emptying the current array, then filling the new one
             if (Array.isArray(val)) {
-                currentProxy.length = 0;
                 var newProxy = proxy[prop];
-                newProxy.proxyHandler._bindElements = currentArrayProxy.proxyHandler._bindElements;
+                if(currentProxy){
+                    currentProxy.length = 0;
+                    newProxy.proxyHandler._bindElements = currentProxy.proxyHandler._bindElements;
+                }
                 newProxy.proxyHandler._handleSplice(0,0,val.length, val);
             }
         }
