@@ -19,7 +19,7 @@
             <li>
                 <label type=text bind="{text: ()=>this.firstName}"></label>
                 <label type=text bind="{text: ()=>this.lastName}"></label>
-                <button bind="{click: ()=>$parent.people.splice($index(),1)}">Remove</button>
+                <button bind="{click: ()=>$parent.splice($index(),1)}">Remove</button>
             </li>
         </ul>
     </template>

@@ -7,6 +7,7 @@ class MicroBinder {
         this._calculatingDependancies = false;
         this._calculatedDependancies = [];
         this.bindObjects = [];
+        this.subBinders = {if:1,with:1,foreach:1};
         this.binders = {
             text:(e, m, js)=>mb.bind(m, js, (v) => e.innerText = v),
             html:(e, m, js)=>mb.bind(m, js, (v) => e.innerHTML = v),
@@ -32,64 +33,51 @@ class MicroBinder {
             },
             css:(e,m,js)=>{
                 // Add a binding for each css class
-                for (const key in js) {
-                    const element = js[key];
-                    mb.bind(m, element, (v) => v?e.classList.add(key):e.classList.remove(key));      
-                }
+                for (const key in js) mb.bind(m, js[key], (v) => v?e.classList.add(key):e.classList.remove(key));
             },
             attr:(e,m,js)=>{
                 // Add a binding for each attribute
-                for (const key in js) {
-                    const element = js[key];
-                    mb.bind(m, element, (v) => e.setAttribute(key, v));      
-                }
+                for (const key in js) mb.bind(m, js[key], (v) => e.setAttribute(key, v));
             },
             style:(e,m,js)=>{
-                // Add a binding for each attribute
-                for (const key in js) {
-                    const element = js[key];
-                    mb.bind(m, element, (v) => e.style[key]=v);      
-                }
+                // Add a binding for each style
+                for (const key in js)mb.bind(m, js[key], (v) => e.style[key]=v);
             },
             visible: (e, m, js)=> mb.bind(m, js, (v) => e.style.display = v ? null : "none"),
             click: (e, m, js)=> e.addEventListener("click", (event) => js.call(m, e)),
             submit: (e, m, js)=> e.addEventListener("submit", (event) => js.call(m, e)),
-            if: (e, m, js) => {
-                var subTemplate = e.innerHTML;
-                e.innerHTML = "";
+            if: (e, m, js, boi) => {
+                e.insertFunc = this.bindObjects[boi-1];
                 mb.bind(m, js, (v) => {
                     if(v){
-                        mb.render(m, e, subTemplate);
+                        var frag = document.createDocumentFragment();
+                        e.insertFunc.call(m, m, ()=>0, frag, e);
+                        e.appendChild(frag);
                     } else {
                         e.innerHTML = "";
                     }
                 });
-                return true;
             },
-            with: (e, m, js) => {
-                var subTemplate = e.innerHTML;
-                e.innerHTML = "";
+            with: (e, m, js, boi) => {
+                e.insertFunc = this.bindObjects[boi-1];
                 mb.bind(m, js, (v) => {
                     e.innerHTML = "";
-                    mb.render(v, e, subTemplate);
+                    var frag = document.createDocumentFragment();
+                        e.insertFunc.call(v, v, ()=>0, frag, e);
+                        e.appendChild(frag);
                 });
-                return true;
             },
-            foreach: (e, m, js)=>{ 
-                var subTemplate = e.innerHTML;
-                e.innerHTML = "";
+            foreach: (e, m, js, boi)=>{ 
+                e.insertFunc = this.bindObjects[boi-1];
                 var arr = js.call(m);
                 e.bindArray = [];
                 arr.proxyHandler._bindElements.push(e);
-            
-                var insertFunc = (item, index)=> {
-                    var renderedElement = mb.render(item, e, subTemplate, index, m);
-                    if(e.bindArray[index]==null)e.bindArray[index] = [];
-                    e.bindArray[index] = renderedElement;
-                };
-                e.insertFunc = insertFunc;
-                arr.forEach(insertFunc);
-                return true;
+                var frag = document.createDocumentFragment();
+                for (let index = 0; index < arr.length; index++) {
+                    const item = arr[index];
+                    e.insertFunc.call(item, item, ()=>index, frag, e);
+                }
+                e.appendChild(frag);
             },
             selectedOptions:(e,m,js)=>{
                 mb.bind(m, js, (v) => {
@@ -140,10 +128,10 @@ class MicroBinder {
         }
     }
 
-    _executeBinding(e, $data, o){
+    executeBinding(e, $data, o, boi){
         var stopBindingChildren = false;
         for (var p in o) {
-            stopBindingChildren = mb.binders[p](e, $data, o[p]) | stopBindingChildren;
+            stopBindingChildren = mb.binders[p](e, $data, o[p], boi) | stopBindingChildren;
         }
     
         return stopBindingChildren;
@@ -155,108 +143,71 @@ class MicroBinder {
         return c.bindIndex;
     }
 
-    _bindElement(modelProxy, e, index, parent, rootElement){
-        var stop = false;
-        if(e.nodeType == 1 && e.hasAttribute('bind')){
-            var t = e.getAttribute('bind');
-            e.removeAttribute('bind');
-            if(t != null && t.length > 0){
-
-                var tInt = parseInt(t);
-                if(!isNaN(tInt)){
-                    var bindObject = this.bindObjects[tInt].call(modelProxy,e,modelProxy,()=>this._indexFunc(e), parent, rootElement);
-                    stop = this._executeBinding(e, modelProxy, bindObject);
-                } else {
-                    var bindObject = new Function('$element,$data,$index,$parent,$root', 'return ' + t + ';').call(modelProxy,e,modelProxy,()=>this._indexFunc(e), parent, rootElement);
-                    stop = this._executeBinding(e, modelProxy, bindObject);
-                }
-            }
-        }
-        if(!stop){
-            e.childNodes.forEach(n => this._bindElement(modelProxy, n, index, parent, rootElement));
-        } 
+    _buildInsertFunc(e){
+        var arr = [];
+        arr.maxDepth = 0;
+        arr.push("var $parent = $data.$parent, t = null;\n");
+        arr.push("var renderedElements = [];\n");
+        if(e.toString() === '[object NodeList]')
+            e.forEach(n => this._buildInsertFuncVisit(n, arr, 1));
+        else 
+            this._buildInsertFuncVisit(e,arr,0);
+        arr.push("if(!$element.bindArray)$element.bindArray=[];\n");
+        arr.push("$element.bindArray[$index()] = renderedElements;\n");
+        console.log(arr.join(''));
+        return new Function('$data,$index,n0,$element', arr.join(''));
     }
 
-    /*loadExternalTemplate(script, model, rootElement, index, parent)
-    {
-      var mb = this;
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET",script.src)
-      xhr.onreadystatechange = function () {
-        if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-          mb.render(model, rootElement, xhr.responseText, index, parent);
+    _buildInsertFuncVisit(e, arr, depth){
+        var stop = false;
+        if(e.nodeType == 1){
+            arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            if(depth > arr.maxDepth)arr.maxDepth = depth;
+            e.getAttributeNames().forEach(a => {
+                if(a == 'bind'){
+                    // check if the bind object has a binder that controls its children
+                    var bindObject = new Function("return " + e.getAttribute(a))();
+                    stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
+                    if(stop){
+                        this.bindObjects.push(this._buildInsertFunc(e.childNodes));
+                    }
+                    arr.push("mb.executeBinding(n", depth, ", $data, ",e.getAttribute(a),", ", this.bindObjects.length, ");\n");
+                } else {
+                    arr.push("n", depth, ".setAttribute('", a, "', '", e.getAttribute(a), "');\n");
+                }
+            });
+            arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+            if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
         }
-      };
-      xhr.send();
-    }*/
+        else if(e.nodeType == 3){
+            arr.push("t = document.createTextNode(`", e.nodeValue, "`);\n");
+            arr.push("n", depth-1 ,".appendChild(t);\n\n");
+            if(depth-1==0)arr.push("renderedElements.push(t);\n\n");
+        }
+        if(!stop)e.childNodes.forEach(n => this._buildInsertFuncVisit(n, arr, depth+1));
+    }
 
-    render(model, target, template, index, parent){
+    render(model, target, template){
         var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
-        
         var tempElement = null;
         if(typeof template === "string"){
             var temp = document.getElementById(template);
             if(temp != null){
-                if(temp.hasAttribute('src')){
-                    loadExternalTemplate(temp, model, target, index, parent);
-                    return;
-                }
                 tempElement = temp.content ? temp.content.cloneNode(true) : document.createRange().createContextualFragment(temp.innerHTML);
             } else {
-                tempElement = document.createRange().createContextualFragment(template)
+                var frag = document.createDocumentFragment();
+                frag.innerHTML = template;
+                tempElement = frag.content;
             }
         } else {
             tempElement = template;
         }
         if(tempElement == null) tempElement = target || document.body;
-        
-        // if there is an index, set the bindIndex for all child nodes of the view
-        if(index != null){
-            for (let i = 0; i < tempElement.childNodes.length; i++) {
-                tempElement.childNodes[i].bindIndex = index;
-            }
-        }
 
-        this._bindElement(modelProxy, tempElement, index, parent, target || document.body);
+        var insertFunc = this._buildInsertFunc(tempElement, modelProxy);
+        insertFunc.call(modelProxy, modelProxy, ()=>0, target, target);
 
-        var addedNodes = [];
-        if(template != null){
-            var ba = target.bindArray;
-            if(index == null || index >= ba.length){
-                // Add to the end of target
-                var lastNodeIndex = target.childNodes.length;
-                target.appendChild(tempElement);
-
-                for (let i = lastNodeIndex; i < target.childNodes.length; i++) {
-                    addedNodes.push(target.childNodes[i]);
-                }
-            } else {
-                if(index == 0){
-                    // Add to the start of the target
-                    var originalNodeCount = target.childNodes.length;
-                    target.prepend(tempElement);
-                    var addedNodeCount = target.childNodes.length - originalNodeCount;
-                    for (let i = 0; i < addedNodeCount; i++) {
-                        addedNodes.push(target.childNodes[i]);
-                    }
-                } 
-                else {
-                    // Add to the middle of the target
-                    var ba = target.bindArray[index-1];
-                    var startElement = ba[ba.length-1];
-                    var endElement = startElement.nextSibling;
-                    var inserted = target.insertBefore(tempElement, endElement);
-
-                    var currentElement = startElement.nextSibling;
-                    while(currentElement != endElement){
-                        addedNodes.push(currentElement);
-                        currentElement = currentElement.nextSibling;
-                    }
-                }
-            }
-        }
-
-        return index == null? modelProxy : addedNodes;
+        return modelProxy;
     }
 }
 var mb = new MicroBinder();
@@ -266,6 +217,7 @@ class ObjectHandler {
         this._handler = this;
         this._childProxies = {};
         this._subscribers = {};
+        this.$parent = null;
     }
 
     _subscribe(prop, triggerFunc, eventFunc, bindingId){
@@ -295,19 +247,9 @@ class ObjectHandler {
         }
     }
 
-    /*unsubscribe(prop, triggerFunc, eventFunc){
-        if(this.subscribers[prop] != null){
-            this.subscribers[prop].forEach((x,i,a)=>{
-                if(x.triggerFunc == triggerFunc && x.eventFunc == eventFunc){
-                    a.splice(i,1);
-                    return;
-                }
-            });
-        }
-    }*/
-    
     get(obj, prop, proxy) {
         if(prop === "proxyHandler") return this;
+        if(prop === "$parent") return this.$parent;
         if(prop === "isProxy") return true;
         if(prop === "proxyObject") return obj;
         //if(prop === "subscribe") return this._subscribe;
@@ -321,9 +263,11 @@ class ObjectHandler {
             mb._setStack.push((v)=>proxy[prop]=v);
         }
 
-        if (typeof val === 'object') {
+        if (val != null && typeof val === 'object') {
             if(this._childProxies[prop] == null){
-                this._childProxies[prop] = new Proxy(val, Object.prototype.toString.call(val) === '[object Date]' ? new DateHandler() : Array.isArray(val) ? new ArrayHandler() : new ObjectHandler());
+                var handler = Object.prototype.toString.call(val) === '[object Date]' ? new DateHandler() : Array.isArray(val) ? new ArrayHandler() : new ObjectHandler();
+                handler.$parent = proxy;
+                this._childProxies[prop] = new Proxy(val, handler);
             }
             return this._childProxies[prop];
         }
@@ -333,7 +277,7 @@ class ObjectHandler {
 
     set(obj, prop, val, proxy) {
         // Dont ever set a property to be a proxy. Unwrap it first.
-        if(val['isProxy'])val = val.proxyObject;
+        if(val!=null&&val['isProxy'])val = val.proxyObject;
         var result = Reflect.set(obj, prop, val, proxy);
         
         // If we are setting an object property, clear out the existing childProxy
@@ -348,7 +292,7 @@ class ObjectHandler {
                     currentProxy.length = 0;
                     newProxy.proxyHandler._bindElements = currentProxy.proxyHandler._bindElements;
                 }
-                newProxy.proxyHandler._handleSplice(0,0,val.length, val);
+                newProxy.proxyHandler._handleSplice(0,0,val.length, newProxy);
             }
         }
         
@@ -407,11 +351,29 @@ class ArrayHandler extends ObjectHandler {
         });
 
         // Add new elements
-        for (let i = startIndex; i < startIndex + pushCount; i++) {
-            this._bindElements.forEach((item)=>{
-                item.insertFunc(proxy[i], i);
-            });
-        }
+        this._bindElements.forEach((item)=>{
+            var frag = document.createDocumentFragment();
+            var insertFunc = item.insertFunc;
+            for (let i = startIndex; i < startIndex + pushCount; i++) {
+                const m = proxy[i];
+                insertFunc.call(m, m, ()=>i, frag, item);
+            }
+            var ba = item.bindArray;
+            if(startIndex == null || startIndex >= ba.length){
+                item.appendChild(frag); 
+            } else {
+                if(startIndex == 0){
+                    // Add to the start of the target
+                    item.prepend(frag);
+                } else {
+                    var ba = item.bindArray[startIndex-1];
+                    var startElement = ba[ba.length-1];
+                    var endElement = startElement.nextSibling;
+                    item.insertBefore(frag, endElement);
+                }
+            }
+        });
+              
         // Update the bindIndex of the remaining nodes
         this._bindElements.forEach((element) => {
             for (let i = startIndex + pushCount; i < element.bindArray.length; i++) {
