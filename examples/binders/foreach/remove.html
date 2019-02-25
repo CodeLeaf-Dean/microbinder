@@ -17,6 +17,7 @@
         <h2>ReadOnly List</h2>
         <ul bind="{foreach: ()=>this.people}">
             <li>
+                <label type=text bind="{text: ()=>$index() + ': '}"></label>
                 <label type=text bind="{text: ()=>this.firstName}"></label>
                 <label type=text bind="{text: ()=>this.lastName}"></label>
                 <button bind="{click: ()=>$parent.splice($index(),1)}">Remove</button>

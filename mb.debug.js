@@ -75,7 +75,7 @@ class MicroBinder {
                 var frag = document.createDocumentFragment();
                 for (let index = 0; index < arr.length; index++) {
                     const item = arr[index];
-                    e.insertFunc.call(item, item, ()=>index, frag, e);
+                    e.insertFunc.call(item, item, index, frag, e, arr.proxyHandler);
                 }
                 e.appendChild(frag);
             },
@@ -137,31 +137,35 @@ class MicroBinder {
         return stopBindingChildren;
     }
 
-    _indexFunc(e){
+    indexFunc(e, handler){
         var c = e;
         while(c.bindIndex == null) c = c.parentNode;
+        if(mb._calculatingDependancies) mb._calculatedDependancies.push({handler: handler, prop: '$index'});
         return c.bindIndex;
     }
 
     _buildInsertFunc(e){
         var arr = [];
         arr.maxDepth = 0;
-        arr.push("var $parent = $data.$parent, t = null;\n");
+        arr.push("var $parent = $data.$parent, t = null, $index = null;\n");
         arr.push("var renderedElements = [];\n");
         if(e.toString() === '[object NodeList]')
             e.forEach(n => this._buildInsertFuncVisit(n, arr, 1));
         else 
             this._buildInsertFuncVisit(e,arr,0);
         arr.push("if(!$element.bindArray)$element.bindArray=[];\n");
-        arr.push("$element.bindArray[$index()] = renderedElements;\n");
-        console.log(arr.join(''));
-        return new Function('$data,$index,n0,$element', arr.join(''));
+        arr.push("$element.bindArray[index] = renderedElements;\n");
+        return new Function('$data,index,n0,$element,handler', arr.join(''));
     }
 
     _buildInsertFuncVisit(e, arr, depth){
         var stop = false;
         if(e.nodeType == 1){
             arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            if(depth==1){
+                arr.push("n", depth ,".bindIndex = index;");
+                arr.push("$index = mb.indexFunc.bind(null, n", depth ,",handler);");
+            }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
             e.getAttributeNames().forEach(a => {
                 if(a == 'bind'){
@@ -356,7 +360,7 @@ class ArrayHandler extends ObjectHandler {
             var insertFunc = item.insertFunc;
             for (let i = startIndex; i < startIndex + pushCount; i++) {
                 const m = proxy[i];
-                insertFunc.call(m, m, ()=>i, frag, item);
+                insertFunc.call(m, m, i, frag, item, this);
             }
             var ba = item.bindArray;
             if(startIndex == null || startIndex >= ba.length){
@@ -380,6 +384,8 @@ class ArrayHandler extends ObjectHandler {
                 element.bindArray[i].forEach((node)=> node.bindIndex = i);
             }
         });
+
+        this._notifySubscribers('$index', proxy);
     }
 
     get(obj, prop, proxy) {
