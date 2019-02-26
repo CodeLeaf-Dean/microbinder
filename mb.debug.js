@@ -1,5 +1,3 @@
-//mb.bindObjects = [function($element,$data,$index,$parent,$root){return {value: ()=>this.firstName}}];
-
 class MicroBinder {
     constructor() {
         this._nextBindingId = 1;
