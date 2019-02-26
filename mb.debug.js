@@ -51,7 +51,7 @@ class MicroBinder {
                 mb.bind(m, js, (v) => {
                     if(v){
                         var frag = document.createDocumentFragment();
-                        e.insertFunc.call(m, m, ()=>0, frag, e);
+                        e.insertFunc.call(m, m, ()=>0, frag, e, null, m.$parent);
                         e.appendChild(frag);
                     } else {
                         e.innerHTML = "";
@@ -63,7 +63,7 @@ class MicroBinder {
                 mb.bind(m, js, (v) => {
                     e.innerHTML = "";
                     var frag = document.createDocumentFragment();
-                        e.insertFunc.call(v, v, ()=>0, frag, e);
+                        e.insertFunc.call(v, v, ()=>0, frag, e, null, v.$parent);
                         e.appendChild(frag);
                 });
             },
@@ -75,7 +75,7 @@ class MicroBinder {
                 var frag = document.createDocumentFragment();
                 for (let index = 0; index < arr.length; index++) {
                     const item = arr[index];
-                    e.insertFunc.call(item, item, index, frag, e, arr.proxyHandler);
+                    e.insertFunc.call(item, item, index, frag, e, arr.proxyHandler, arr);
                 }
                 e.appendChild(frag);
             },
@@ -147,7 +147,7 @@ class MicroBinder {
     _buildInsertFunc(e){
         var arr = [];
         arr.maxDepth = 0;
-        arr.push("var $parent = $data.$parent, t = null, $index = null;\n");
+        arr.push("var t = null, $index = null;\n");
         arr.push("var renderedElements = [];\n");
         if(e.toString() === '[object NodeList]')
             e.forEach(n => this._buildInsertFuncVisit(n, arr, 1));
@@ -155,7 +155,7 @@ class MicroBinder {
             this._buildInsertFuncVisit(e,arr,0);
         arr.push("if(!$element.bindArray)$element.bindArray=[];\n");
         arr.push("$element.bindArray[index] = renderedElements;\n");
-        return new Function('$data,index,n0,$element,handler', arr.join(''));
+        return new Function('$data,index,n0,$element,handler,$parent', arr.join(''));
     }
 
     _buildInsertFuncVisit(e, arr, depth){
@@ -163,23 +163,30 @@ class MicroBinder {
         if(e.nodeType == 1){
             arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
             if(depth==1){
-                arr.push("n", depth ,".bindIndex = index;");
-                arr.push("$index = mb.indexFunc.bind(null, n", depth ,",handler);");
+                arr.push("n", depth ,".bindIndex = index;\n");
+                arr.push("$index = mb.indexFunc.bind(null, n", depth ,",handler);\n");
             }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
-            e.getAttributeNames().forEach(a => {
-                if(a == 'bind'){
-                    // check if the bind object has a binder that controls its children
-                    var bindObject = new Function("return " + e.getAttribute(a))();
-                    stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
-                    if(stop){
-                        this.bindObjects.push(this._buildInsertFunc(e.childNodes));
+
+            if (e.hasAttributes()) {
+                var attrs = e.attributes;
+                for(let i = attrs.length - 1; i >= 0; i--) {
+                    const a = attrs[i].name;
+                    const v = attrs[i].value;
+                    if(a == 'bind'){
+                        // check if the bind object has a binder that controls its children
+                        var bindObject = new Function("return " + v)();
+                        stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
+                        if(stop){
+                            this.bindObjects.push(this._buildInsertFunc(e.childNodes));
+                        }
+                        arr.push("mb.executeBinding(n", depth, ", $data, ",v,", ", this.bindObjects.length, ");\n");
+                    } else {
+                        arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
                     }
-                    arr.push("mb.executeBinding(n", depth, ", $data, ",e.getAttribute(a),", ", this.bindObjects.length, ");\n");
-                } else {
-                    arr.push("n", depth, ".setAttribute('", a, "', '", e.getAttribute(a), "');\n");
                 }
-            });
+            }
+
             arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
             if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
         }
@@ -362,7 +369,7 @@ class ArrayHandler extends ObjectHandler {
             var insertFunc = item.insertFunc;
             for (let i = startIndex; i < startIndex + pushCount; i++) {
                 const m = proxy[i];
-                insertFunc.call(m, m, i, frag, item, this);
+                insertFunc.call(m, m, i, frag, item, this, proxy);
             }
             var ba = item.bindArray;
             if(startIndex == null || startIndex >= ba.length){
