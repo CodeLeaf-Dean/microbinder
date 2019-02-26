@@ -269,7 +269,7 @@ class ObjectHandler {
 
         if (val != null && typeof val === 'object') {
             if(this._childProxies[prop] == null){
-                var handler = Object.prototype.toString.call(val) === '[object Date]' ? new DateHandler() : Array.isArray(val) ? new ArrayHandler() : new ObjectHandler();
+                var handler = Object.prototype.toString.call(val) === '[object Date]' ? new DateHandler() : Array.isArray(val) ? new ArrayHandler(prop,proxy) : new ObjectHandler();
                 handler.$parent = proxy;
                 this._childProxies[prop] = new Proxy(val, handler);
             }
@@ -328,10 +328,12 @@ class DateHandler extends ObjectHandler {
 }
 
 class ArrayHandler extends ObjectHandler {
-    constructor() {
+    constructor(prop, proxy) {
         super();
         this._childProxies = [];
         this._bindElements = [];
+        this._parentProp = prop;
+        this._parentProxy = proxy;
     }
     
     _handleSplice(startIndex, deleteCount, pushCount, proxy){
@@ -386,6 +388,7 @@ class ArrayHandler extends ObjectHandler {
         });
 
         this._notifySubscribers('$index', proxy);
+        this._parentProxy.proxyHandler._notifySubscribers(this._parentProp, this._parentProxy);
     }
 
     get(obj, prop, proxy) {

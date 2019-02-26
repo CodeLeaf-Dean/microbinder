@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+ <style>
+ #pre{
+     float:right;
+ }
+ </style>
+</head>
+  <body>
+    <h1>The foreach binder - Other modifying functions</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p>The foreach binder will render the child nodes of the element for each item in the array. You dont need to use the prop function with the foreach binder, an anonymous function is enough to have the dom update when new elements are added.</p>
+
+    <template id="template1">
+            <label bind="{text: ()=>this.firstName}"></label>
+            <label bind="{text: ()=>this.lastName}"></label>
+            <input type=text bind="{value: ()=>this.firstName}" /> 
+            <input type=text bind="{value: ()=>this.lastName}" />
+            <input type=text bind="{value: ()=>this.firstName}" />
+            <br>
+            <label bind="{text: ()=>this.fullName}"></label>
+            <label for="isAwesome">Is Awesome?</label>
+            <input type="checkbox" id="isAwesome" bind="{checked: ()=>this.isAwesome}"/>
+            <label bind="{text: ()=>this.isAwesome}"></label>
+            <br>
+            <h3 bind="{if: ()=>this.isAwesome}">Headding</h3>
+            <pre id='pre' bind="{if: ()=>this.isAwesome, text: ()=>JSON.stringify(this, null, '  ')}"></pre>
+            <h2>Simple List</h2>
+            <ul bind="{ foreach: ()=>this.simpleList }">
+            <li bind="{text: () => 'index:' + $index() + ', value: ' + this}"></li>
+            </ul>
+            
+            <h2>Tasks</h2>
+            <ul bind="{ foreach: ()=>this.tasks }">
+            <li>
+              <input type="checkbox" bind="{checked: ()=>this.complete}"/>
+              <span bind="{text: ()=> $index() + 1}"></span>
+              <span bind="{text: ()=>this.name}"></span>
+              <input type=text bind="{value: ()=>this.name}"/>
+              <button bind="{click: () => $parent.splice($index(), 1)}">Remove</button>
+            </li>
+            </ul>
+            <input type=input bind="{value: ()=>this.newTaskName}" />
+            <button bind="{click:this.addTask}">Add new task</button>
+            
+            <h2>Other Tasks</h2>
+            <ul bind="{ foreach: ()=>this.otherTasks }">
+            <li>
+              <span bind="{text: ()=>this.name}"></span>
+            </li>
+            </ul>
+            
+            <button bind="{click: () => this.tasks.splice(1,1)}">Splice second tasks</button>
+            <button bind="{click: () => this.otherTasks.push(this.tasks.pop())}">Pop task and Push to other tasks</button>
+            <button bind="{click: () => this.otherTasks.unshift(this.tasks.pop())}">Pop task and Unshift to other tasks</button>
+            <button bind="{click: () => this.otherTasks.push(this.tasks.pop(),this.tasks.pop(),this.tasks.pop())}">Pop 3 and Push to other tasks</button>
+            <button bind="{click: () => this.otherTasks.splice(1,1, this.tasks.pop(),this.tasks.pop(),this.tasks.pop())}">Pop 3 and Splice to other tasks</button>
+            <button bind="{click: () => this.otherTasks[1] = this.tasks[1]}">Set othertask[1] = task[1]</button>
+            <button bind="{click: () => this.otherTasks = [{name:'Task D',complete:false}]}">Set othertask = new array</button>
+            <button bind="{click: () => this.otherTasks.length = 0}">Set othertask.length = 0</button>
+            <button bind="{click: () => this.otherTasks.reverse()}">Reverse OtherTasks</button>
+            <button bind="{click: () => this.otherTasks.fill({name:'Task D',complete:false})}">Fill OtherTasks</button>
+            <button bind="{click: () => this.otherTasks.shift()}">Shift OtherTasks</button>
+            <button bind="{click: () => this.otherTasks[this.otherTasks.length] = this.tasks[1]}">Set othertask[length] = task[1]</button>
+            <button bind="{click: () => this.otherTasks.sort((a,b)=>a.name<b.name?-1:a.ame >b.name?1:0)}">Sort OtherTasks</button>
+            
+    </template>
+
+    <script>
+        class Model {
+		constructor() {
+      this.firstName = 'Dean';
+  		this.lastName = 'North';
+  		this.age = 32;
+      this.isAwesome = false;
+      this.howAwesome = 5;
+      this.simpleList = ["Item A", "Item B", "Item C"];
+      this.tasks = [
+        {name:"Task A",complete:true},
+        {name:"Task B",complete:false},
+        {name:"Task C",complete:false}
+      ];
+      this.otherTasks = [
+      	{name:"Other Task A",complete:true},
+        {name:"Other Task B",complete:false},
+        {name:"Other Task C",complete:false}
+      ];
+
+      this.newTaskName = "";
+    }
+    
+    get fullName() {
+      return this.firstName + ' ' + this.lastName;
+    }
+
+    addTask() {
+      this.tasks.push({name:this.newTaskName,complete:false});
+      this.newTaskName = "";
+    }
+}
+
+        mb.render(new Model(), document.body, "template1");
+    </script>
+  </body>
+</html>
