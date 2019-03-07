@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>Custom Elements</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p></p>
+
+    <template id="person-template">
+        <input type=text bind="{value:()=>this.proxy.firstName}">
+        <input type=text bind="{value:()=>this.proxy.lastName}">
+        <label bind="{text:()=>this.proxy.firstName + ' ' + this.proxy.lastName}"></label>
+        <button bind="{click:()=>this.proxyObject.setAttribute('lastName','123')}">Set lastName attribute</button>
+    </template>
+
+    <template id="page-template">
+        <h2>Below are 2 instances of the person custom element.</h2>
+        <h3>This instance uses the attr binder and does not update the root model</h3>
+        <mb-person bind="{attr:{firstName:()=>this.people[0].firstName,lastName:()=>this.people[0].lastName}}"></mb-person>
+        <br/>
+        <h3>Thiss instance uses the prop binder amd DOES update the root model</h3>
+        <mb-person bind="{prop:{firstName:()=>this.people[1].firstName,lastName:()=>this.people[1].lastName}}"></mb-person>
+        
+        
+        <pre bind="{text: ()=>JSON.stringify(this, null, '  ')}"></pre>
+    </template>
+
+    <script>
+        class Person extends MicroBinderHTMLElement{
+            static observedAttributes = ['firstname', 'lastname']; 
+            constructor() {
+                super('person-template');
+                this.firstName='';
+                this.lastName='';
+                this.bindAttributes();
+            }
+        }
+        customElements.define('mb-person', Person);
+
+        class Page {
+            constructor() {
+                this.people = [
+                    {firstName:'John',lastName:'Doe'},
+                    {firstName:'Jane',lastName:'Doe'}
+                ];
+            }
+        }
+        mb.render(new Page(), document.body, 'page-template');
+    </script>
+  </body>
+</html>

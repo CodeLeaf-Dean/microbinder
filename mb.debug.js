@@ -7,46 +7,57 @@ class MicroBinder {
         this.bindObjects = [];
         this.subBinders = {if:1,with:1,foreach:1};
         this.binders = {
-            text:(e, m, js)=>mb.bind(m, js, (v) => e.innerText = v),
-            html:(e, m, js)=>mb.bind(m, js, (v) => e.innerHTML = v),
+            text:(e, m, js)=>mb.bind(m, js, (o,v) => e.innerText = v),
+            html:(e, m, js)=>mb.bind(m, js, (o,v) => e.innerHTML = v),
             value:(e, m, js)=>{
-                mb.bind(m, js, (v) => e.value = v||'');
+                mb.bind(m, js, (o,v) => e.value = v||'');
                 e.addEventListener("change", (event) => mb.setValue(m, js, event.target.value));
             },
             textInput:(e, m, js)=>{
-                mb.bind(m, js, (v) => e.value = v||'');
+                mb.bind(m, js, (o,v) => e.value = v||'');
                 e.addEventListener("input", (event) => mb.setValue(m, js, event.target.value));
             },
             checked:(e, m, js)=>{
-                mb.bind(m, js, (v) => {
+                mb.bind(m, js, (o,v) => {
                     if(v)e.setAttribute("checked","")
                     else e.removeAttribute("checked","")
                 });
                 e.addEventListener("change", (event) => mb.setValue(m, js, event.target.checked));
             },
             hasFocus:(e, m, js)=>{
-                mb.bind(m, js, (v) => v ? e.focus() : e.blur());
+                mb.bind(m, js, (o,v) => v ? e.focus() : e.blur());
                 e.addEventListener("focus", (event) => mb.setValue(m, js, true));
                 e.addEventListener("blur", (event) => mb.setValue(m, js, false));
             },
             css:(e,m,js)=>{
                 // Add a binding for each css class
-                for (const key in js) mb.bind(m, js[key], (v) => v?e.classList.add(key):e.classList.remove(key));
+                for (const key in js) mb.bind(m, js[key], (o,v) => v?e.classList.add(key):e.classList.remove(key));
             },
             attr:(e,m,js)=>{
                 // Add a binding for each attribute
-                for (const key in js) mb.bind(m, js[key], (v) => e.setAttribute(key, v));
+                for (const key in js) mb.bind(m, js[key], (o,v) => e.setAttribute(key, v));
+            },
+            prop:(e,m,js)=>{
+                // Add a binding for each property
+                for (const key in js) {
+                    mb.bind(m, js[key], (o,v) => e[key] = v);
+                }
+                e.addEventListener("propchange", (event) => {
+                    if(js[event.name] != null){
+                        mb.setValue(m, js[event.name], event.newValue);
+                    }
+                });
             },
             style:(e,m,js)=>{
                 // Add a binding for each style
-                for (const key in js)mb.bind(m, js[key], (v) => e.style[key]=v);
+                for (const key in js)mb.bind(m, js[key], (o,v) => e.style[key]=v);
             },
-            visible: (e, m, js)=> mb.bind(m, js, (v) => e.style.display = v ? null : "none"),
+            visible: (e, m, js)=> mb.bind(m, js, (o,v) => e.style.display = v ? null : "none"),
             click: (e, m, js)=> e.addEventListener("click", (event) => js.call(m, e)),
             submit: (e, m, js)=> e.addEventListener("submit", (event) => js.call(m, e)),
             if: (e, m, js, boi) => {
                 e.insertFunc = this.bindObjects[boi-1];
-                mb.bind(m, js, (v) => {
+                mb.bind(m, js, (o,v) => {
                     if(v){
                         var frag = document.createDocumentFragment();
                         e.insertFunc.call(m, m, ()=>0, frag, e, null, m.$parent);
@@ -58,7 +69,7 @@ class MicroBinder {
             },
             with: (e, m, js, boi) => {
                 e.insertFunc = this.bindObjects[boi-1];
-                mb.bind(m, js, (v) => {
+                mb.bind(m, js, (o,v) => {
                     e.innerHTML = "";
                     var frag = document.createDocumentFragment();
                         e.insertFunc.call(v, v, ()=>0, frag, e, null, v.$parent);
@@ -78,7 +89,7 @@ class MicroBinder {
                 e.appendChild(frag);
             },
             selectedOptions:(e,m,js)=>{
-                mb.bind(m, js, (v) => {
+                mb.bind(m, js, (o,v) => {
                     var vs = v.map(s=>s.toString());
                     Array.from(e.options).forEach(o=>o.selected = vs.indexOf(o.value)>-1);
                 });
@@ -95,15 +106,15 @@ class MicroBinder {
                 }
             },
             enable:(e,m,js)=>{
-                mb.bind(m, js, (v) => !v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
+                mb.bind(m, js, (o,v) => !v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
             },
             disable:(e,m,js)=>{
-                mb.bind(m, js, (v) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
+                mb.bind(m, js, (o,v) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'));      
             }
         }
     }
 
-    bind(model, triggerFunc, eventFunc){
+    bind(model, triggerFunc, eventFunc, oldValue){
         this._calculatingDependancies = true;
         this._calculatedDependancies = []
         var newValue = triggerFunc.call(model);
@@ -113,7 +124,7 @@ class MicroBinder {
             this._bindings[bindingId] = [];
             this._calculatedDependancies.forEach(x=>x.handler._subscribe(x.prop, triggerFunc, eventFunc, bindingId));
         }
-        eventFunc(newValue);
+        eventFunc(oldValue, newValue);
     }
 
     setValue(model, triggerFunc, value){
@@ -151,9 +162,9 @@ class MicroBinder {
             e.forEach(n => this._buildInsertFuncVisit(n, arr, 1));
         else 
             this._buildInsertFuncVisit(e,arr,0);
-        arr.push("if(!$element.bindArray)$element.bindArray=[];\n");
-        arr.push("$element.bindArray[index] = renderedElements;\n");
-        return new Function('$data,index,n0,$element,handler,$parent', arr.join(''));
+        arr.push("if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
+        arr.push("$funcElement.bindArray[index] = renderedElements;\n");
+        return new Function('$data,index,n0,$funcElement,handler,$parent', arr.join(''));
     }
 
     _buildInsertFuncVisit(e, arr, depth){
@@ -178,7 +189,9 @@ class MicroBinder {
                         if(stop){
                             this.bindObjects.push(this._buildInsertFunc(e.childNodes));
                         }
+                        arr.push("{ let $element = n", depth, ";");
                         arr.push("mb.executeBinding(n", depth, ", $data, ",v,", ", this.bindObjects.length, ");\n");
+                        arr.push('}');
                     } else {
                         arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
                     }
@@ -242,11 +255,11 @@ class ObjectHandler {
         mb._bindings[bindingId].push(sub);
     }
 
-    _notifySubscribers(prop, proxy){
+    _notifySubscribers(prop, proxy, oldValue, newValue){
         if(this._subscribers[prop] != null){
             var bindingsToRemove = [];
             this._subscribers[prop].forEach(x=>{
-                mb.bind(proxy, x._triggerFunc, x._eventFunc);
+                mb.bind(proxy, x._triggerFunc, x._eventFunc, oldValue);
                 bindingsToRemove.push(x._bindingId);
             });
             bindingsToRemove.forEach(x=>{
@@ -287,6 +300,7 @@ class ObjectHandler {
     set(obj, prop, val, proxy) {
         // Dont ever set a property to be a proxy. Unwrap it first.
         if(val!=null&&val['isProxy'])val = val.proxyObject;
+        var oldVal = obj[prop];
         var result = Reflect.set(obj, prop, val, proxy);
         
         // If we are setting an object property, clear out the existing childProxy
@@ -306,7 +320,7 @@ class ObjectHandler {
         }
         
         // Notify subscribers of the change
-        this._notifySubscribers(prop, proxy);
+        this._notifySubscribers(prop, proxy, oldVal, val);
 
         return result;
     }
@@ -323,7 +337,7 @@ class DateHandler extends ObjectHandler {
                 var original = obj;
                 var result = val.apply(obj, arguments);
                 if(obj != original){
-                    this._notifySubscribers(prop, proxy);
+                    this._notifySubscribers(prop, proxy, original, result);
                 }
                 return result;
             }.bind(this);
@@ -485,5 +499,64 @@ class ArrayHandler extends ObjectHandler {
             }
         }
         return result;
+    }
+}
+
+class MicroBinderHTMLElement extends HTMLElement{
+    constructor(template) {
+        super();
+        this.template = template;
+        this.handlingAttributeChange= false;
+        this.settingAttribute = false;
+        this.proxy = new Proxy(this,new ObjectHandler());
+        this.attributeProperty = {};
+        //return new Proxy(this,new ObjectHandler());
+    }
+
+    bindAttributes(){
+        this.__proto__.constructor.observedAttributes.forEach(name=> {
+            // find and store property name that mattches the lowercase attribute
+            this.attributeProperty[name] = (()=>{for (const key in this) if(key.toLowerCase() == name) return key})();
+            let propName = this.attributeProperty[name];
+            this.proxy[propName] = this.getAttribute(name)||this[propName];
+            mb.bind(this.proxy, ()=>this.proxy[propName], (oldVal, newVal) => {
+                if(oldVal!=newVal){
+                    if(!this.handlingAttributeChange){
+                        if(newVal== ""){
+                            this.removeAttribute(name);
+                        } else {
+                            this.settingAttribute = true;
+                            this.setAttribute(name, newVal);
+                            this.settingAttribute = false;
+                        }
+                    }
+                    var e = new Event('propchange');
+                    e.name = propName;
+                    e.newValue = newVal;
+                    this.dispatchEvent(e);
+                }
+            });
+        });
+    }
+    
+    disconnectedCallback() {
+        console.log('Custom square element removed from page.');
+    }
+
+    adoptedCallback() {
+        console.log('Custom square element moved to new page.');
+    }
+
+    connectedCallback() {
+        console.log('Custom square element added to page.');
+        mb.render(this, this, this.template);
+    }
+    attributeChangedCallback(name, oldValue, newValue) {
+        console.log('Custom square element attributes changed.');
+        if(!this.settingAttribute){
+            this.handlingAttributeChange = true;
+            this.proxy[this.attributeProperty[name]] = newValue;
+            this.handlingAttributeChange = false;
+        }
     }
 }
