@@ -48,6 +48,21 @@ class MicroBinder {
                     }
                 });
             },
+            props:(e,m,js)=>{
+                // Add a binding for the entire object changing
+                mb.bind(m, js, (o,obj) => {
+                    // Add a binding for each property
+                    for (const key in obj) {
+                        mb.bind(obj, ()=>obj[key], (o,v) => e[key] = v);
+                    }
+                });
+                e.addEventListener("propchange", (event) => {
+                    var obj = js();
+                    if(obj[event.name] != null){
+                        mb.setValue(obj, ()=>obj[event.name], event.newValue);
+                    }
+                });
+            },
             style:(e,m,js)=>{
                 // Add a binding for each style
                 for (const key in js)mb.bind(m, js[key], (o,v) => e.style[key]=v);
@@ -344,6 +359,9 @@ class DateHandler extends ObjectHandler {
         }
         return val;
     }
+    set(obj, prop, val, proxy) {
+        return super.set(obj, prop, val, proxy);
+    }
 }
 
 class ArrayHandler extends ObjectHandler {
@@ -502,23 +520,41 @@ class ArrayHandler extends ObjectHandler {
     }
 }
 
+class CustomElementHandler extends ObjectHandler {
+    constructor() {
+        super();
+    }
+    get(obj, prop, proxy) {
+        var val = super.get(obj, prop, proxy);
+        if (typeof val === 'function') {
+            return function (el) {
+                var result = val.apply(obj, arguments);
+                return result;
+            }.bind(this);
+        }
+        return val;
+    }
+}
+
 class MicroBinderHTMLElement extends HTMLElement{
     constructor(template) {
         super();
         this.template = template;
         this.handlingAttributeChange= false;
         this.settingAttribute = false;
-        this.proxy = new Proxy(this,new ObjectHandler());
+        this.proxy = new Proxy(this,new CustomElementHandler());
         this.attributeProperty = {};
         //return new Proxy(this,new ObjectHandler());
     }
 
     bindAttributes(){
         this.__proto__.constructor.observedAttributes.forEach(name=> {
-            // find and store property name that mattches the lowercase attribute
+            // find and store property name that matches the lowercase attribute
             this.attributeProperty[name] = (()=>{for (const key in this) if(key.toLowerCase() == name) return key})();
             let propName = this.attributeProperty[name];
+            // read attribute values and set initial property values
             this.proxy[propName] = this.getAttribute(name)||this[propName];
+            // when a property changes, update the attribute
             mb.bind(this.proxy, ()=>this.proxy[propName], (oldVal, newVal) => {
                 if(oldVal!=newVal){
                     if(!this.handlingAttributeChange){
@@ -530,6 +566,7 @@ class MicroBinderHTMLElement extends HTMLElement{
                             this.settingAttribute = false;
                         }
                     }
+                    // fire an event that the property was changed
                     var e = new Event('propchange');
                     e.name = propName;
                     e.newValue = newVal;
@@ -540,19 +577,15 @@ class MicroBinderHTMLElement extends HTMLElement{
     }
     
     disconnectedCallback() {
-        console.log('Custom square element removed from page.');
     }
 
     adoptedCallback() {
-        console.log('Custom square element moved to new page.');
     }
 
     connectedCallback() {
-        console.log('Custom square element added to page.');
-        mb.render(this, this, this.template);
+        mb.render(this.proxy, this, this.template);
     }
     attributeChangedCallback(name, oldValue, newValue) {
-        console.log('Custom square element attributes changed.');
         if(!this.settingAttribute){
             this.handlingAttributeChange = true;
             this.proxy[this.attributeProperty[name]] = newValue;
