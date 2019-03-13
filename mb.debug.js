@@ -584,6 +584,18 @@ class MicroBinderHTMLElement extends HTMLElement{
 
     connectedCallback() {
         mb.render(this.proxy, this, this.template);
+        // set the attributes for any properties which are bound
+        this.settingAttribute = true;
+        this.__proto__.constructor.observedAttributes.forEach(name=> {
+            let propName = this.attributeProperty[name];
+            var newVal = this[propName];
+            if(newVal == ""){
+                this.removeAttribute(name);
+            } else {
+                this.setAttribute(name, newVal);
+            }
+        });
+        this.settingAttribute = false;
     }
     attributeChangedCallback(name, oldValue, newValue) {
         if(!this.settingAttribute){

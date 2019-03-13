@@ -37,7 +37,7 @@
 
     <script>
         class Person extends MicroBinderHTMLElement{
-            static observedAttributes = ['firstname', 'lastname']; 
+            static get observedAttributes() { return ['firstname', 'lastname']; } 
             constructor() {
                 super('person-template');
                 this.firstName='';
