@@ -544,7 +544,11 @@ class MicroBinderHTMLElement extends HTMLElement{
         this.settingAttribute = false;
         this.proxy = new Proxy(this,new CustomElementHandler());
         this.attributeProperty = {};
+        this.attributesBound = false;
         //return new Proxy(this,new ObjectHandler());
+    }
+    useShadow(){
+        this.shadow = this.attachShadow({mode: 'open'});
     }
 
     bindAttributes(){
@@ -574,6 +578,7 @@ class MicroBinderHTMLElement extends HTMLElement{
                 }
             });
         });
+        this.attributesBound = true;
     }
     
     disconnectedCallback() {
@@ -583,7 +588,7 @@ class MicroBinderHTMLElement extends HTMLElement{
     }
 
     connectedCallback() {
-        mb.render(this.proxy, this, this.template);
+        mb.render(this.proxy, this.shadow?this.shadow:this, this.template);
         // set the attributes for any properties which are bound
         this.settingAttribute = true;
         this.__proto__.constructor.observedAttributes.forEach(name=> {
@@ -598,7 +603,7 @@ class MicroBinderHTMLElement extends HTMLElement{
         this.settingAttribute = false;
     }
     attributeChangedCallback(name, oldValue, newValue) {
-        if(!this.settingAttribute){
+        if(this.attributesBound && !this.settingAttribute){
             this.handlingAttributeChange = true;
             this.proxy[this.attributeProperty[name]] = newValue;
             this.handlingAttributeChange = false;

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+    <h1>Custom Elements - Shadow DOM</h1>
+    <p>
+        <a href="/examples.html">Back to examples</a>
+    </p>
+
+    <p></p>
+
+    <template id="dialog-template">
+        <div class="dialog">
+            <div class="dialog-content" bind="{text:()=>this.dialogTitle}"></div>
+            <div class="dialog-content"></div>
+        </div>
+    </template>
+
+    <template id="page-template">
+        <h2>Below are 2 instances of the dialog custom element.</h2>
+        <mb-dialog bind="{props:()=>this.dialog1}"></mb-dialog>
+        <mb-dialog bind="{props:()=>this.dialog2}"></mb-dialog>
+
+        <pre bind="{text: ()=>JSON.stringify(this, null, '  ')}"></pre>
+    </template>
+
+    <script>
+        class Dialog extends MicroBinderHTMLElement{
+            static get observedAttributes() { return ['dialogtitle']; } 
+            constructor() {
+                super('dialog-template');
+                this.dialogTitle='';
+                this.bindAttributes();
+                this.useShadow();
+            }
+        }
+        customElements.define('mb-dialog', Dialog);
+
+        class Page {
+            constructor() {
+                this.dialog1 = {dialogTitle:'Example Dialog 1'};
+                this.dialog2 = {dialogTitle:'Example Dialog 2'};
+            }
+        }
+        mb.render(new Page(), document.body, 'page-template');
+    </script>
+  </body>
+</html>
