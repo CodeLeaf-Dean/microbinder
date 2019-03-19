@@ -232,7 +232,7 @@ class MicroBinder {
             if(temp != null){
                 tempElement = temp.content ? temp.content.cloneNode(true) : document.createRange().createContextualFragment(temp.innerHTML);
             } else {
-                var frag = document.createDocumentFragment();
+                var frag = document.createElement('template');
                 frag.innerHTML = template;
                 tempElement = frag.content;
             }

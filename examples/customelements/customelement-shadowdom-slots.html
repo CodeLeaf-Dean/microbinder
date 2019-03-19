@@ -6,24 +6,45 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>Custom Elements - Shadow DOM</h1>
+    <h1>Custom Elements - Shadow DOM - slots</h1>
     <p>
         <a href="/examples.html">Back to examples</a>
     </p>
 
     <p></p>
 
+    
+
     <template id="dialog-template">
+        <style>
+            .dialog{
+                border: 2px solid black;
+                width:200px;
+                height:200px;
+            }
+            .dialog-title{
+                width:100%;
+                border-bottom: 1px solid black;
+            }
+        </style>
         <div class="dialog">
-            <div class="dialog-title" bind="{text:()=>this.dialogTitle}"></div>
-            <div class="dialog-content"></div>
+            <div class="dialog-title"><slot name="title"></slot></div>
+            <div class="dialog-content"><slot name="content"></slot></div>
         </div>
     </template>
 
     <template id="page-template">
         <h2>Below are 2 instances of the dialog custom element.</h2>
-        <mb-dialog bind="{props:()=>this.dialog1}"></mb-dialog>
-        <mb-dialog bind="{props:()=>this.dialog2}"></mb-dialog>
+        <mb-dialog>
+            <h2 slot="title" bind="{text:()=>this.dialog1.dialogTitle}"></h2>
+            <div slot="content" bind="{text:()=>this.dialog1.content}">
+            </div>
+        </mb-dialog>
+        <mb-dialog>
+            <h2 slot="title" bind="{text:()=>this.dialog2.dialogTitle}"></h2>
+            <div slot="content" bind="{text:()=>this.dialog2.content}">
+            </div>
+        </mb-dialog>
 
         <pre bind="{text: ()=>JSON.stringify(this, null, '  ')}"></pre>
     </template>
@@ -33,7 +54,6 @@
             static get observedAttributes() { return ['dialogtitle']; } 
             constructor() {
                 super('dialog-template');
-                this.dialogTitle='';
                 this.bindAttributes();
                 this.useShadow();
             }
@@ -42,8 +62,14 @@
 
         class Page {
             constructor() {
-                this.dialog1 = {dialogTitle:'Example Dialog 1'};
-                this.dialog2 = {dialogTitle:'Example Dialog 2'};
+                this.dialog1 = {
+                    dialogTitle:'Example Dialog 1',
+                    content: 'Dialog 1 content'
+                };
+                this.dialog2 = {
+                    dialogTitle:'Example Dialog 2',
+                    content: 'Dialog 2 content'
+                };
             }
         }
         mb.render(new Page(), document.body, 'page-template');
