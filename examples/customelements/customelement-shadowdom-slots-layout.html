@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <script type="text/javascript" src="/mb.debug.js"></script>
+    <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+  </head>
+  <body>
+
+    <style>
+        ul{ color:red; list-style-type: none; }
+    </style>
+
+    <template id="layout-template">
+        <style>
+            .sidebar{position: absolute;left:0;top:0;bottom:0;width:200px;border:1px solid black;}
+            .page-content{position: absolute;left:200px;top:0;bottom:0;right:0;border:1px solid black;}
+        </style>
+
+        <div class="page">
+            <div class="sidebar">
+                <slot name="sidebar"></slot>
+            </div>
+            <div class="page-content">
+                <slot name="content"></slot>
+            </div>
+        </div>
+    </template>
+
+    
+    <mb-layout>
+        <ul slot="sidebar">
+            <li>Sidebar item 1</li>
+            <li>Sidebar item 2</li>
+            <li>Sidebar item 3</li>
+        </ul>
+        <div slot="content">
+            <h1>Custom Elements - Shadow DOM - slots - layout</h1>
+            <p>
+                <a href="/examples.html">Back to examples</a>
+            </p>
+        </div>
+    </mb-layout>
+        
+    <script>
+        class Layout extends MicroBinderHTMLElement{
+            constructor() {
+                super('layout-template');
+                this.useShadow();
+            }
+        }
+        customElements.define('mb-layout', Layout);
+    </script>
+  </body>
+</html>
