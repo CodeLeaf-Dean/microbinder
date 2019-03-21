@@ -230,7 +230,19 @@ class MicroBinder {
         if(typeof template === "string"){
             var temp = document.getElementById(template);
             if(temp != null){
-                tempElement = temp.content ? temp.content.cloneNode(true) : document.createRange().createContextualFragment(temp.innerHTML);
+                if(temp.nodeName == 'LINK'){
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET",temp.href)
+                    xhr.onreadystatechange = function () {
+                        if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                        mb.render(model, target, xhr.responseText);
+                        }
+                    };
+                    xhr.send();
+                    return;
+                } else {
+                    tempElement = temp.content ? temp.content.cloneNode(true) : document.createRange().createContextualFragment(temp.innerHTML);
+                }
             } else {
                 var frag = document.createElement('template');
                 frag.innerHTML = template;
@@ -245,7 +257,7 @@ class MicroBinder {
         var insertFunc = this._buildInsertFunc(tempElement, modelProxy);
         insertFunc.call(modelProxy, modelProxy, ()=>0, target, target);
 
-        return modelProxy;
+       // return modelProxy;
     }
 }
 var mb = new MicroBinder();

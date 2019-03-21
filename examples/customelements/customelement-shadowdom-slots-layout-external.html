@@ -4,24 +4,29 @@
     <meta charset="utf-8"/>
     <script type="text/javascript" src="/mb.debug.js"></script>
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
-    <link id="template1" href="external-template.html" rel="preload" as="fetch" crossorigin="anonymous" />
+    <link id="layout-template" href="layout-main.html" rel="preload" as="fetch" crossorigin="anonymous" />
   </head>
   <body>
-    <h1>Render using an external template</h1>
-    <p>
-        <a href="/examples.html">Back to examples</a>
-    </p>
+    <style>
+        ul{ color:red; list-style-type: none; }
+    </style>
 
-    <p>External templats must respect the CORS policy.</p>
-
+    <mb-layout>
+        <ul slot="sidebar">
+            <li>Sidebar item 1</li>
+            <li>Sidebar item 2</li>
+            <li>Sidebar item 3</li>
+        </ul>
+        <div slot="content">
+            <h1>Custom Elements - Shadow DOM - slots - layout - external</h1>
+            <p>
+                <a href="/examples.html">Back to examples</a>
+            </p>
+        </div>
+    </mb-layout>
+        
     <script>
-        class Person {
-            constructor() {
-                this.firstName = 'Dean';
-                this.lastName = 'North';
-            }
-        }
-        mb.render(new Person, document.body, "template1");
+        customElements.define('mb-layout', mb.templateClass('layout-template'));
     </script>
   </body>
 </html>

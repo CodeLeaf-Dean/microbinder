@@ -1,0 +1,13 @@
+<style>
+    .sidebar{position: absolute;left:0;top:0;bottom:0;width:200px;border:1px solid black;}
+    .page-content{position: absolute;left:200px;top:0;bottom:0;right:0;border:1px solid black;}
+</style>
+
+<div class="page">
+    <div class="sidebar">
+        <slot name="sidebar"></slot>
+    </div>
+    <div class="page-content">
+        <slot name="content"></slot>
+    </div>
+</div>
