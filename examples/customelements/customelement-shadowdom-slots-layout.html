@@ -27,7 +27,6 @@
         </div>
     </template>
 
-    
     <mb-layout>
         <ul slot="sidebar">
             <li>Sidebar item 1</li>
@@ -43,13 +42,7 @@
     </mb-layout>
         
     <script>
-        class Layout extends MicroBinderHTMLElement{
-            constructor() {
-                super('layout-template');
-                this.useShadow();
-            }
-        }
-        customElements.define('mb-layout', Layout);
+        customElements.define('mb-layout', mb.templateClass('layout-template'));
     </script>
   </body>
 </html>

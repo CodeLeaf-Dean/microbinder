@@ -613,3 +613,13 @@ class MicroBinderHTMLElement extends HTMLElement{
         }
     }
 }
+
+mb.templateClass = function(template){
+    var wrapperClass = class TemplateClass extends MicroBinderHTMLElement{
+        constructor() {
+            super(template);
+            this.useShadow();
+        }
+    };
+    return wrapperClass;
+}
