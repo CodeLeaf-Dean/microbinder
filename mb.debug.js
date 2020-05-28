@@ -5,7 +5,7 @@ class MicroBinder {
         this._calculatingDependancies = false;
         this._calculatedDependancies = [];
         this.bindObjects = [];
-        this.bindObjectCount = 0;
+        this.bindObjectCount = -1;
         this.defaultBinders = [
             {match:"input[type=text]",binder:"textInput"},
             {match:"ul",binder:"foreach"},
@@ -78,7 +78,7 @@ class MicroBinder {
             enter:(e, c, js)=>{e.addEventListener("keypress", (event) => {if(event.keyCode === 13){js()(c.$data, event)}});},
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
             if: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi-1];
+                e.insertFunc = this.bindObjects[boi];
                 e._if = false;
                 mb.bind(c, js, (o,v) => {
                     if(v && !e._if){
@@ -93,7 +93,7 @@ class MicroBinder {
                 });
             },
             with: (e, m, js, boi) => {
-                e.insertFunc = this.bindObjects[boi-1];
+                e.insertFunc = this.bindObjects[boi];
                 mb.bind(m, js, (o,v) => {
                     e.innerHTML = "";
                     var frag = document.createDocumentFragment();
@@ -102,7 +102,7 @@ class MicroBinder {
                 });
             },
             foreach: (e, c, js, boi)=>{ 
-                e.insertFunc = this.bindObjects[boi-1];
+                e.insertFunc = this.bindObjects[boi];
                 var arr = js.call(c.$data);
                 e.bindArray = [];
                 arr.proxyHandler._bindElements.push(e);
@@ -196,16 +196,16 @@ class MicroBinder {
         return "text";
     }
 
-    _buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj){
+    _buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset){
         arr.maxDepth = 0;
         arr.push("\nvar t = null, $index = null, $parent = null,$data = null;\n");
         arr.push("var renderedElements = [];\n");
 
         if(e.toString() === '[object NodeList]'){
-            e.forEach(n => this._buildInsertFuncVisit(n, arr, bindObjectArr, 1, source, mapObj));
+            e.forEach(n => this._buildInsertFuncVisit(n, arr, bindObjectArr, 1, funcIndex, source, mapObj, offset));
         }
         else {
-            this._buildInsertFuncVisit(e, arr, bindObjectArr, 0, source, mapObj);
+            this._buildInsertFuncVisit(e, arr, bindObjectArr, 0, funcIndex, source, mapObj, offset);
         }
         //arr.push("if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
         //arr.push("$funcElement.bindArray[$context.index] = renderedElements;\n");
@@ -214,20 +214,23 @@ class MicroBinder {
         return arr;
     }
 
-    _buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj){
+    _buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj, offset){
         var arr = [];
-        this._buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj);
+        this._buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
         return new Function('$context,n0,$funcElement', arr.join(''));
     }
 
-    _buildInsertFuncVisit(e, arr, bindObjectArr, depth, source, mapObj){
+    _buildInsertFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
         var stop = false;
         if(e.nodeType == 1){
             arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
             if(depth==1){
-                arr.push("n", depth ,".bindIndex = $context.index;\n");
+                arr.push("n", depth ,".bindIndex = $context.$index;\n");
+                
             }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
+
+            arr.push("$context.$element = n", depth ,";\n");
 
             if (e.hasAttributes()) {
                 var attrs = e.attributes;
@@ -250,23 +253,34 @@ class MicroBinder {
 
                         // check if the bind object has a binder that controls its children
                         stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
-                        var bindObjectIndex = this.bindObjectCount;
+                        var bindObjectIndex = funcIndex;
                         if(stop){
                             //this.bindObjects.push(this._buildInsertFunc(e.childNodes, this.bindObjects.length + 1));
-                            bindObjectIndex = ++this.bindObjectCount;
-                            bindObjectArr.push('\n    mb.bindObjects[',bindObjectIndex-1,'] = ', this._buildInsertFunc(bindObjectArr, e.childNodes, bindObjectIndex, source, mapObj), ';\n');
+                            this.bindObjectCount ++;
+                            bindObjectIndex = this.bindObjectCount;
+                            bindObjectArr[this.bindObjectCount] = { code: ['\n    mb.bindObjects[',this.bindObjectCount,'] = ', this._buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjectCount, source, mapObj, true), ';\n']};
                         }
-                        arr.push("{ let $element = n", depth, ";");
+                        arr.push("{");
 
+                        var sourceLine = 0;
+                        var targetLine = 0;
                         if(source){
                             // Get the line number for this element
                             var contentBefore = source.substr(0, source.indexOf(e.outerHTML))
-                            var line = contentBefore.match(/\n/g).length;
-                            var currentLine = arr.join('').match(/\n/g).length;// TODO: Perf
-                            mapObj[currentLine] = line;
+                            targetLine = contentBefore.match(/\n/g).length;
+                            sourceLine = arr.join('').match(/\n/g).length + 3;// TODO: Perf
+                            
+                            if(offset){
+                                if(mapObj.offset[funcIndex] == undefined){
+                                    mapObj.offset[funcIndex] = [];
+                                }
+                                mapObj.offset[funcIndex][sourceLine] = targetLine;
+                            } else {
+                                mapObj.root[sourceLine] = targetLine;
+                            }
                         }
 
-                        arr.push("mb.executeBinding(n", depth, ", $context, (function(){with($context){with($data){\nreturn ",v,"\n}}}).call($context.$data), ", bindObjectIndex, ");\n");
+                        arr.push("mb.executeBinding(n", depth, ", $context, (function(){with($context){with($data){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($context.$data), ", bindObjectIndex, ");\n");
                         arr.push('}');
                     } else {
                         arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
@@ -282,12 +296,12 @@ class MicroBinder {
             arr.push("n", depth-1 ,".appendChild(t);\n\n");
             if(depth-1==0)arr.push("renderedElements.push(t);\n\n");
         }
-        if(!stop)e.childNodes.forEach(n => this._buildInsertFuncVisit(n, arr, bindObjectArr, depth+1, source, mapObj));
+        if(!stop)e.childNodes.forEach(n => this._buildInsertFuncVisit(n, arr, bindObjectArr, depth+1, funcIndex, source, mapObj, offset));
     }
 
     _buildInsertFuncWithSourceMap(e, sourceName){
         var source;
-        var mapObj = [];
+        var mapObj = {root:[],offset:[]};
         if(e.toString() === '[object NodeList]'){
             source = Array.prototype.reduce.call(e, function(html, node) {
                 return html + ( node.outerHTML || node.nodeValue );
@@ -298,15 +312,25 @@ class MicroBinder {
             temp.appendChild( e.cloneNode(true) );
             source = temp.innerHTML;
         }
-        mapObj.length = source.split("\n").length;
+        
 
         var arr = ["function mb_start(){\n"];
         var bindObjectArr = [];
         
-        this._buildInsertFuncBody(arr, bindObjectArr, e, null, source, mapObj);
+        this._buildInsertFuncBody(arr, bindObjectArr, e, 0, source, mapObj);
 
         arr.push("};");
-        arr = arr.concat(bindObjectArr);
+        var lineOffset = arr.join('').match(/\n/g).length + 3;
+        mapObj.root.length = lineOffset;
+
+        for (let i = 0; i < bindObjectArr.length; i++) {
+            const element = bindObjectArr[i];
+            arr.push("// Offset: ", lineOffset);
+            mapObj.offset[i].length = element.code.join('').match(/\n/g).length;
+            lineOffset += mapObj.offset[i].length;
+            arr = arr.concat(element.code);
+        }
+
         arr.push("\nmb_start();");
 
         arr.push("\n");
@@ -358,14 +382,27 @@ class MicroBinder {
 
         var mappings = "";
         var pos = 0;
-        for (let i = 0; i < mapObj.length; i++) {
-            const element = mapObj[i];
+        for (let i = 0; i < mapObj.root.length; i++) {
+            const element = mapObj.root[i];
             if(element != undefined){
                 var diff = element - pos;
                 mappings = mappings + base64VlqEncode([0,0,diff,0]);
                 pos += diff;
             }
             mappings = mappings + ";"
+        }
+
+        for (let i = 0; i < mapObj.offset.length; i++) {
+            const maps = mapObj.offset[i];
+            for (let j = 0; j < maps.length; j++) {
+                const element = maps[j];
+                if(element != undefined){
+                    var diff = element - pos;
+                    mappings = mappings + base64VlqEncode([0,0,diff,0]);
+                    pos += diff;
+                }
+                mappings = mappings + ";"
+            }
         }
 
         var sourceMap = 
@@ -441,24 +478,18 @@ class MicroBinder {
     build(model, target, template){
         var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
         var insertFunc = this._generateRootInsertFunc(modelProxy, target, template);
-
-        var dist = "";
-
-//         for (let i = 0; i < this.bindObjects.length; i++) {
-//             const element = this.bindObjects[i];
-//             dist = dist + `mb.bindObjects[`+i+`] = ` + element.toString() + `;
-// `;
-//         }
-
-        dist = dist + `
-        var start = ` + insertFunc.toString();
-
-        return dist;
+        return insertFunc.toString();
     }
 
     run(model, target, insertFunc){
         var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
-        insertFunc.call(modelProxy, modelProxy, ()=>0, target, target);
+        var rootContext = {
+            $data: modelProxy,
+            $index: null,
+            $parent: null
+        };
+
+        insertFunc.call(modelProxy, rootContext, target);
     }
 }
 var mb = new MicroBinder();
