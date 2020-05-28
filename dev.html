@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+        <meta charset="utf-8"/>
+        <script type="text/javascript" src="/mb.debug.js"></script>
+    </head>
+    <body>
+        <template id="t1">
+            <input type=text bind=firstName /> 
+            <input type=text bind=lastName />
+            <label bind=firstName></label>
+            <label bind=lastName></label>
+
+            <!-- <hr/>
+            <input type=text bind="{textInput: this.firstName}" /> 
+            <input type=text bind="{textInput: this.lastName}" />
+            <label bind="{text: this.firstName}"></label>
+            <label bind="{text: this.lastName}"></label>
+
+            <hr/>
+            <input type=text bind="{textInput: $data.firstName}" /> 
+            <input type=text bind="{textInput: $data.lastName}" />
+            <label bind="{text: $data.firstName}"></label>
+            <label bind="{text: $data.lastName}"></label>
+
+            <hr/>
+            <input type=text bind="{textInput: firstName}" /> 
+            <input type=text bind="{textInput: lastName}" />
+            <label bind="{text: firstName}"></label>
+            <label bind="{text: lastName}"></label> -->
+
+            
+
+            <hr/>
+
+            <!-- <label bind="{text: broke}"></label> -->
+
+            <ul bind=fruit>
+                <li>
+                    <div bind="{if:$parent.editItem != null && $data.proxyObject == $parent.editItem.proxyObject}">
+                        <span type=text bind="{text: $index + ': '}"></span>
+                        <input type=text bind="textInput:name,enter:()=>$parent.save()" />
+                        <button bind="()=>$parent.save()">Done</button>
+                    </div>
+                    
+                    <div bind="{if:!($parent.editItem != null && $data.proxyObject == $parent.editItem.proxyObject)}">
+                        <span type=text bind="{text: $index + ': '}"></span>
+                        <span bind=name></span>
+                        <button bind="()=>test()">Test</button>
+                        <button bind="()=>$parent.edit(this)">Edit</button>
+                        <!-- <button bind="click:$parent.edit">This Context Broken Edit</button>
+                        <button bind="click:function(){$parent.edit($data)}">Edit3</button> -->
+
+                        <button bind="()=>$parent.moveUp(this)">/\</button>
+                        <button bind="()=>$parent.moveDown(this)">\/</button>
+                    </div>
+
+                    <ul bind=types>
+                        <span type=text bind="{text: $index + ': '}"></span>
+                        <span bind="{text: $data}"></span>
+                    </ul>
+                </li>
+            </ul>
+
+        </template>
+        <script>
+            class Person {
+                constructor() {
+                    this.firstName = 'Micro';
+                    this.lastName = 'Binder';
+                    this.fruit = [
+                        {name:"Apple", types:["Pink Lady","Gala","Granny Smith"], test:function(){alert(this.name)}},
+                        {name:"Pear", types:["Confrence","Golden"], test:()=>alert(this.name)},
+                        {name:"Lemon", types:["Big", "Small"], test:()=>alert(this.name)},
+                        {name:"Lime", types:["Big", "Small"], test:()=>alert(this.name)}
+                    ];
+                    this.editItem = null;
+                }
+
+                edit(item){
+                    this.editItem = item;
+                }
+                save(item){
+                    this.editItem = null;
+                }
+                moveUp(item){
+                }
+                moveDown(item){
+                }
+            }
+            mb.render(new Person(), document.body, 't1');
+
+            //var dist = mb.build(new Person(), document.body, 't1');
+            //debugger;
+            //mb.run(new Person(), document.body, start);
+
+        </script>
+    </body>
+</html>
