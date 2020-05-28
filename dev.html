@@ -38,11 +38,11 @@
 
             <ul bind=fruit>
                 <li>
-                    <div bind="{if:$parent.editItem != null && $data.proxyObject == $parent.editItem.proxyObject}">
+                    <section bind="{if:$parent.editItem != null && $data.proxyObject == $parent.editItem.proxyObject}">
                         <span type=text bind="{text: $index + ': '}"></span>
                         <input type=text bind="textInput:name,enter:()=>$parent.save()" />
                         <button bind="()=>$parent.save()">Done</button>
-                    </div>
+                    </section>
                     
                     <div bind="{if:!($parent.editItem != null && $data.proxyObject == $parent.editItem.proxyObject)}">
                         <span type=text bind="{text: $index + ': '}"></span>
@@ -57,8 +57,8 @@
                     </div>
 
                     <ul bind=types>
-                        <span type=text bind="{text: $index + ': '}"></span>
                         <span bind="{text: $data}"></span>
+                        <span type=text bind="{text: $index + ': '}"></span>
                     </ul>
                 </li>
             </ul>
@@ -96,5 +96,7 @@
             //mb.run(new Person(), document.body, start);
 
         </script>
+
+        
     </body>
 </html>
