@@ -54,6 +54,8 @@
 
                         <button bind="()=>$parent.moveUp(this)">/\</button>
                         <button bind="()=>$parent.moveDown(this)">\/</button>
+
+                        <button bind="()=>$parent.delete(this)">X</button>
                     </div>
 
                     <ul bind=types>
@@ -86,6 +88,10 @@
                 }
                 save(item){
                     this.editItem = null;
+                }
+                delete(item){
+                    var index = this.fruit.indexOf(item);
+                    this.fruit.splice(index, 1);
                 }
                 moveUp(item){
                     var index = this.fruit.indexOf(item);

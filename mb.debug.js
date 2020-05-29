@@ -113,13 +113,10 @@ class MicroBinder {
                 var frag = document.createDocumentFragment();
                 for (let index = 0; index < arr.length; index++) {
                     const item = arr[index];
-                    var childContext = {
-                        $data: item,
-                        $index: index,
-                        $parent: c.$data,
-                        $parentContext: c
-                    };
-                    e.insertFunc.call(item, childContext, frag, e);
+                    if(c.childContexts[index] == null){
+                        c.childContexts[index] = new BindingContext(item,index,c);
+                    }
+                    e.insertFunc.call(item, c.childContexts[index], frag, e);
                 }
                 e.appendChild(frag);
             },
@@ -228,10 +225,10 @@ class MicroBinder {
         var stop = false;
         if(e.nodeType == 1){
             arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
-            if(depth==1){
-                arr.push("n", depth ,".bindIndex = $context.$index;\n");
+            // if(depth==1){
+            //     arr.push("n", depth ,".bindIndex = $context.$index;\n");
                 
-            }
+            // }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
 
             arr.push("$context.$element = n", depth ,";\n");
@@ -472,12 +469,7 @@ class MicroBinder {
 
     run(model, target, insertFunc){
         var modelProxy = this.makeProxy(model);
-        var rootContext = {
-            $data: modelProxy,
-            $index: null,
-            $parent: null
-        };
-
+        var rootContext = new BindingContext(modelProxy);
         insertFunc.call(modelProxy, rootContext, target);
         return modelProxy;
     }
@@ -638,6 +630,19 @@ class ArrayHandler extends ObjectHandler {
         for(let na=0;na<pushCount;na++)newArgs[na+2] = null;
         Array.prototype.splice.apply(this._childProxies, newArgs);
 
+        // Update child contexts
+        if(this._bindElements.length > 0){
+            let element = this._bindElements[0];
+            element.$context.childContexts.splice(startIndex,deleteCount);
+            for (let i = startIndex; i < startIndex + pushCount; i++) {
+                const m = proxy[i];
+                element.$context.childContexts.splice(i,0,new BindingContext(m,i,element.$context));
+            }
+            for (let i = startIndex + pushCount; i < element.$context.childContexts.length; i++) {
+                element.$context.childContexts[i].$index = i;
+            }
+        }
+
         // Remove deleted elements
         this._bindElements.forEach((element) => {
             for (let i = 0; i < deleteCount; i++) {
@@ -657,13 +662,7 @@ class ArrayHandler extends ObjectHandler {
             var $context = item.$context;
             for (let i = startIndex; i < startIndex + pushCount; i++) {
                 const m = proxy[i];
-                var childContext = {
-                    $data: m,
-                    $index: i,
-                    $parent: $context.$data,
-                    $parentContext: $context
-                };
-                insertFunc.call(m, childContext, frag, item);
+                insertFunc.call(m, $context.childContexts[i], frag, item);
             }
             var ba = item.bindArray;
             if(startIndex == null || startIndex >= ba.length){
@@ -680,15 +679,7 @@ class ArrayHandler extends ObjectHandler {
                 }
             }
         });
-              
-        // Update the bindIndex of the remaining nodes
-        this._bindElements.forEach((element) => {
-            for (let i = startIndex + pushCount; i < element.bindArray.length; i++) {
-                element.bindArray[i].forEach((node)=> node.bindIndex = i);
-            }
-        });
-
-        //this._notifySubscribers('$index', proxy);
+        
         this._parentProxy.proxyHandler._notifySubscribers(this._parentProp, this._parentProxy);
     }
 
@@ -759,16 +750,6 @@ class ArrayHandler extends ObjectHandler {
                     return result;
                 }.bind(this);
             }
-            // if(prop === 'indexOf'){
-            //     return function (){
-            //         var searchElement = arguments[0];
-            //         var result = Array.prototype[prop].call(obj, searchElement, arguments[1] ?? 0);
-            //         if(result == -1 && searchElement.isProxy){
-            //             Array.prototype[prop].call(obj, searchElement.proxyObject, arguments[1] ?? 0);
-            //         }
-            //         return result;
-            //     }.bind(this);
-            // }
     
             return val.bind(proxy);
         }
@@ -791,6 +772,27 @@ class ArrayHandler extends ObjectHandler {
             }
         }
         return result;
+    }
+}
+
+class BindingContext{
+    constructor(data, index, parentContext) {
+        this.$data = data;
+        this.$parentContext = parentContext;
+        this.childContexts = [];
+        this._proxy = new Proxy({$index:index}, new ObjectHandler());
+    }
+
+    get $parent() {
+        return this.$parentContext.$data;
+    }
+
+    get $index() {
+        if(mb._calculatingDependancies) mb._calculatedDependancies.push({handler: this._proxy.proxyHandler, prop: '$index'});
+        return this._proxy.$index;;
+    }
+    set $index(value) {
+        this._proxy.$index = value;
     }
 }
 
