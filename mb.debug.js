@@ -79,11 +79,12 @@ class MicroBinder {
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
             if: (e, c, js, boi) => {
                 e.insertFunc = this.bindObjects[boi];
+                e.$context = c;
                 e._if = false;
                 mb.bind(c, js, (o,v) => {
                     if(v && !e._if){
                         var frag = document.createDocumentFragment();
-                        e.insertFunc.call(c.$data, c, frag);
+                        e.insertFunc.call(c.$data, c, frag, e);
                         e.appendChild(frag);
                         e._if = true;
                     } else if(!v && e._if) {
@@ -94,15 +95,18 @@ class MicroBinder {
             },
             with: (e, m, js, boi) => {
                 e.insertFunc = this.bindObjects[boi];
+                e.$context = c;
                 mb.bind(m, js, (o,v) => {
                     e.innerHTML = "";
                     var frag = document.createDocumentFragment();
-                        e.insertFunc.call(v, v, 0, frag, e, null, v.$parent);
+                        //e.insertFunc.call(v, v, 0, frag, e, null, v.$parent);
+                        e.insertFunc.call(c.$data, c, frag, e);
                         e.appendChild(frag);
                 });
             },
             foreach: (e, c, js, boi)=>{ 
                 e.insertFunc = this.bindObjects[boi];
+                e.$context = c;
                 var arr = js.call(c.$data);
                 e.bindArray = [];
                 arr.proxyHandler._bindElements.push(e);
@@ -115,7 +119,7 @@ class MicroBinder {
                         $parent: c.$data,
                         $parentContext: c
                     };
-                    e.insertFunc.call(item, childContext, frag, arr);
+                    e.insertFunc.call(item, childContext, frag, e);
                 }
                 e.appendChild(frag);
             },
@@ -177,9 +181,9 @@ class MicroBinder {
         return stopBindingChildren;
     }
 
-    indexFunc(){
-        return this.$index;
-    }
+    // indexFunc(){
+    //     return this.$index;
+    // }
 
     // indexFunc(e, handler){
     //     var c = e;
@@ -207,10 +211,10 @@ class MicroBinder {
         else {
             this._buildInsertFuncVisit(e, arr, bindObjectArr, 0, funcIndex, source, mapObj, offset);
         }
-        //arr.push("if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
-        //arr.push("$funcElement.bindArray[$context.index] = renderedElements;\n");
-        //return new Function('$data,index,n0,$funcElement,handler,$parent', arr.join(''));
-
+        arr.push("if($funcElement){\n");
+        arr.push("    if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
+        arr.push("    $funcElement.bindArray[$context.$index] = renderedElements;\n");
+        arr.push("}\n");
         return arr;
     }
 
@@ -313,7 +317,6 @@ class MicroBinder {
             source = temp.innerHTML;
         }
         
-
         var arr = ["function mb_start(){\n"];
         var bindObjectArr = [];
         
@@ -420,12 +423,10 @@ class MicroBinder {
         arr.push("\n");
         arr.push("//# sourceURL=" + sourceName + ".template.js");
 
-        
-
         return new Function('$context,n0,$funcElement', arr.join(''));
     }
 
-    _generateRootInsertFunc(modelProxy, target, template){
+    _generateRootInsertFunc(target, template){
         var tempElement = null;
         var templateName = "microbinder-root-template";
         if(typeof template === "string"){
@@ -460,29 +461,17 @@ class MicroBinder {
         return this._buildInsertFuncWithSourceMap(tempElement, templateName);
     }
 
-    render(model, target, template){
-        var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
-        var insertFunc = this._generateRootInsertFunc(modelProxy, target, template);
-
-        var rootContext = {
-            $data: modelProxy,
-            $index: null,
-            $parent: null
-        };
-
-        insertFunc.call(modelProxy, rootContext, target);
-
-       // return modelProxy;
+    makeProxy(model){
+        return typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
     }
 
-    build(model, target, template){
-        var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
-        var insertFunc = this._generateRootInsertFunc(modelProxy, target, template);
-        return insertFunc.toString();
+    build(target, template){
+        var insertFunc = this._generateRootInsertFunc(target, template);
+        return insertFunc;
     }
 
     run(model, target, insertFunc){
-        var modelProxy = typeof model === 'object' && !model.isProxy ? new Proxy(model, new ObjectHandler()) : model;
+        var modelProxy = this.makeProxy(model);
         var rootContext = {
             $data: modelProxy,
             $index: null,
@@ -490,10 +479,18 @@ class MicroBinder {
         };
 
         insertFunc.call(modelProxy, rootContext, target);
+        return modelProxy;
+    }
+
+    render(model, target, template){
+       var insertFunc = this.build(target, template);
+       return this.run(model, target, insertFunc);
     }
 }
 var mb = new MicroBinder();
 
+/// This class is used to create a js object from the binding string so that we can get a list of its used properties. 
+/// The alternative to this approach would be to use regular expressions or a code parser
 class FunctionTester {
     has(obj, prop) {return true;}
     get(obj, prop, proxy) {
@@ -504,9 +501,7 @@ class FunctionTester {
         return proxy;
     }
     set(obj, prop, val, proxy) {}
-    apply(obj, thisArg, argumentsList) {
-        return this;
-    }
+    apply(obj, thisArg, argumentsList) {return this;}
 }
 
 class ObjectHandler {
@@ -514,7 +509,7 @@ class ObjectHandler {
         this._handler = this;
         this._childProxies = {};
         this._subscribers = {};
-        this.$parent = null;
+        this.parentProxy = null;
     }
 
     _subscribe(prop, triggerFunc, eventFunc, bindingId){
@@ -546,7 +541,7 @@ class ObjectHandler {
 
     get(obj, prop, proxy) {
         if(prop === "proxyHandler") return this;
-        if(prop === "$parent") return this.$parent;
+        if(prop === "parentProxy") return this.parentProxy;
         if(prop === "isProxy") return true;
         if(prop === "proxyObject") return obj;
         //if(prop === "subscribe") return this._subscribe;
@@ -565,7 +560,7 @@ class ObjectHandler {
         if (val != null && typeof val === 'object') {
             if(this._childProxies[prop] == null){
                 var handler = Object.prototype.toString.call(val) === '[object Date]' ? new DateHandler() : Array.isArray(val) ? new ArrayHandler(prop,proxy) : new ObjectHandler();
-                handler.$parent = proxy;
+                handler.parentProxy = proxy;
                 this._childProxies[prop] = new Proxy(val, handler);
             }
             return this._childProxies[prop];
@@ -659,9 +654,16 @@ class ArrayHandler extends ObjectHandler {
         this._bindElements.forEach((item)=>{
             var frag = document.createDocumentFragment();
             var insertFunc = item.insertFunc;
+            var $context = item.$context;
             for (let i = startIndex; i < startIndex + pushCount; i++) {
                 const m = proxy[i];
-                insertFunc.call(m, m, i, frag, item, this, proxy);
+                var childContext = {
+                    $data: m,
+                    $index: i,
+                    $parent: $context.$data,
+                    $parentContext: $context
+                };
+                insertFunc.call(m, childContext, frag, item);
             }
             var ba = item.bindArray;
             if(startIndex == null || startIndex >= ba.length){
@@ -686,7 +688,7 @@ class ArrayHandler extends ObjectHandler {
             }
         });
 
-        this._notifySubscribers('$index', proxy);
+        //this._notifySubscribers('$index', proxy);
         this._parentProxy.proxyHandler._notifySubscribers(this._parentProp, this._parentProxy);
     }
 
@@ -697,11 +699,11 @@ class ArrayHandler extends ObjectHandler {
             if(prop === 'splice'){
                 return function (el) {
                     var startIndex = arguments[0];
-                    if(startIndex > this.length)startIndex = this.length;
-                    if(startIndex < -this.length)startIndex = 0;
-                    if(startIndex<0)startIndex = this.length + startIndex + 1;
-                    var deleteCount = arguments.length == 1 ? this.length - startIndex : arguments[1];
-                    if(deleteCount > this.length - startIndex)deleteCount = this.length - startIndex;
+                    if(startIndex > obj.length)startIndex = obj.length;
+                    if(startIndex < -obj.length)startIndex = 0;
+                    if(startIndex<0)startIndex = obj.length + startIndex + 1;
+                    var deleteCount = arguments.length == 1 ? obj.length - startIndex : arguments[1];
+                    if(deleteCount > obj.length - startIndex)deleteCount = obj.length - startIndex;
                     var result = Array.prototype.splice.apply(obj, arguments);
                     this._handleSplice(startIndex, deleteCount, arguments.length - 2, proxy);
                     return result;
@@ -757,6 +759,16 @@ class ArrayHandler extends ObjectHandler {
                     return result;
                 }.bind(this);
             }
+            // if(prop === 'indexOf'){
+            //     return function (){
+            //         var searchElement = arguments[0];
+            //         var result = Array.prototype[prop].call(obj, searchElement, arguments[1] ?? 0);
+            //         if(result == -1 && searchElement.isProxy){
+            //             Array.prototype[prop].call(obj, searchElement.proxyObject, arguments[1] ?? 0);
+            //         }
+            //         return result;
+            //     }.bind(this);
+            // }
     
             return val.bind(proxy);
         }

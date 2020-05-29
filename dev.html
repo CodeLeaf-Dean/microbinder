@@ -63,6 +63,9 @@
                 </li>
             </ul>
 
+            <hr/>
+            <ul bind=fruit><li bind="$index + ' - ' + name"></li></ul>
+
         </template>
         <script>
             class Person {
@@ -85,8 +88,18 @@
                     this.editItem = null;
                 }
                 moveUp(item){
+                    var index = this.fruit.indexOf(item);
+                    if(index > 0){
+                        this.fruit.splice(index, 1);
+                        this.fruit.splice(index - 1, 0, item);
+                    }
                 }
                 moveDown(item){
+                    var index = this.fruit.indexOf(item);
+                    if(index < this.fruit.length - 1){
+                        this.fruit.splice(index, 1);
+                        this.fruit.splice(index + 1, 0, item);
+                    }
                 }
             }
             mb.render(new Person(), document.body, 't1');
