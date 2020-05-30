@@ -52,26 +52,40 @@ class MicroBinder {
             prop:(e,c,js)=>{
                 // Add a binding for each property
                 var jsobj = js();
+                var settingValue = false;
                 for (const key in jsobj) {
-                    mb.bind(c, jsobj[key], (o,v) => e[key] = v);
+                    mb.bind(c, jsobj[key], (o,v) => {
+                        if(e.proxy[key] != v){
+                            settingValue = true;
+                            e.proxy[key] = v;
+                            settingValue = false;
+                        }
+                    });
                 }
                 e.addEventListener("propchange", (event) => {
-                    if(js[event.name] != null){
+                    if(js()[event.name] != null && settingValue == false){
                         mb.setValue(c, jsobj[event.name], event.newValue);
                     }
                 });
             },
             props:(e,c,js)=>{
                 // Add a binding for the entire object changing
+                var settingValue = false;
                 mb.bind(c, js, (o,obj) => {
                     // Add a binding for each property
                     for (const key in obj) {
-                        mb.bind(obj, ()=>obj[key], (o,v) => e[key] = v);
+                        mb.bind(obj, ()=>obj[key], (o,v) => {
+                            if(e.proxy[key] != v){
+                                settingValue = true;
+                                e.proxy[key] = v;
+                                settingValue = false;
+                            }
+                        });
                     }
                 });
                 e.addEventListener("propchange", (event) => {
                     var obj = js();
-                    if(obj[event.name] != null){
+                    if(obj[event.name] != null && settingValue == false){
                         mb.setValue(obj, ()=>obj[event.name], event.newValue);
                     }
                 });
@@ -244,7 +258,7 @@ class MicroBinder {
                         if(!v.startsWith("{")) v = "{" + v + "}";
                         // Wrap all bind attribute object propeties with functions
                         var fakeContext = {$data:new Proxy(function() {}, new FunctionTester()),$index: ()=>0};
-                        var bindObject = new Function("$context", "with($context){with($data){ return " + v + "}}")(fakeContext);
+                        var bindObject = new Function("$context", "with($context){with($data){ return " + v + "}}").call(fakeContext.$data, fakeContext);
                         for (const key in bindObject) {
                             v = v.replace(new RegExp(key + "\s*:"), key + ": ()=> ");
                         }

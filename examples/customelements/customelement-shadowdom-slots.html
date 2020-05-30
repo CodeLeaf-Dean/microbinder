@@ -20,7 +20,7 @@
             .dialog{
                 border: 2px solid black;
                 width:200px;
-                height:200px;
+                height:100px;
             }
             .dialog-title{
                 width:100%;
@@ -36,17 +36,15 @@
     <template id="page-template">
         <h2>Below are 2 instances of the dialog custom element.</h2>
         <mb-dialog>
-            <h2 slot="title" bind="{text:()=>this.dialog1.dialogTitle}"></h2>
-            <div slot="content" bind="{text:()=>this.dialog1.content}">
-            </div>
+            <h2 slot="title" bind="this.dialog1.dialogTitle"></h2>
+            <div slot="content" bind="this.dialog1.content"></div>
         </mb-dialog>
         <mb-dialog>
-            <h2 slot="title" bind="{text:()=>this.dialog2.dialogTitle}"></h2>
-            <div slot="content" bind="{text:()=>this.dialog2.content}">
-            </div>
+            <h2 slot="title" bind="this.dialog2.dialogTitle"></h2>
+            <div slot="content" bind="this.dialog2.content"></div>
         </mb-dialog>
 
-        <pre bind="{text: ()=>JSON.stringify(this, null, '  ')}"></pre>
+        <pre bind="text: JSON.stringify(this, null, '  ')"></pre>
     </template>
 
     <script>

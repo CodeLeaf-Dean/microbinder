@@ -14,25 +14,33 @@
     <p></p>
 
     <template id="person-template">
-        <input type=text bind="{value:()=>this.firstName}">
-        <input type=text bind="{value:()=>this.lastName}">
-        <label bind="{text:()=>this.firstName + ' ' + this.lastName}"></label>
-        <button bind="{click:()=>this.setAttribute('lastName','123')}">Set lastName attribute</button>
+        <input type=text bind="firstName">
+        <input type=text bind="lastName">
+        <label bind="firstName + ' ' + lastName"></label>
+        <button bind="click:()=>this.setAttribute('lastName','123')">Set lastName attribute</button>
     </template>
 
     <template id="page-template">
         <h2>Below are 3 instances of the person custom element.</h2>
         <h3>This instance uses the attr binder and does not update the root model</h3>
-        <mb-person bind="{attr:{firstName:()=>this.people[0].firstName,lastName:()=>this.people[0].lastName}}"></mb-person>
+        <mb-person bind="attr:({firstName:()=>this.people[0].firstName,lastName:()=>this.people[0].lastName})"></mb-person>
         <br/>
-        <h3>This instance uses the prop binder amd DOES update the root model</h3>
-        <mb-person bind="{prop:{firstName:()=>this.people[1].firstName,lastName:()=>this.people[1].lastName}}"></mb-person>
-        <h3>This instance uses the props binder amd DOES update the root model</h3>
-        <mb-person bind="{props:()=>this.people[2]}"></mb-person>
+        <h3>This instance uses the prop binder and DOES update the root model</h3>
+        <mb-person bind="prop:({firstName:()=>this.people[1].firstName,lastName:()=>this.people[1].lastName})"></mb-person>
+        <h3>This instance uses the props binder and DOES update the root model</h3>
+        <mb-person bind="props:this.people[2]"></mb-person>
         <h3>This instance doesnt use any binders and is hard coded</h3>
         <mb-person firstName="Jen" lastName="Smith"></mb-person>
 
-        <pre bind="{text: ()=>JSON.stringify(this, null, '  ')}"></pre>
+<hr/>
+    <ul bind=people>
+        <li>
+            <input type=text bind="firstName">
+            <input type=text bind="lastName">
+        </li>
+    </ul>
+
+        <pre bind="text: JSON.stringify(this, null, '  ')"></pre>
     </template>
 
     <script>
