@@ -14,7 +14,7 @@
     <p>The click binder adds a click event handler that calls the bind function.</p>
 
     <template id="template1">
-        <input type="button" value="click me" bind="{click:()=>this.showAlert()}"/>
+        <input type="button" value="click me" bind="click:this.showAlert"/>
     </template>
 
     <script>

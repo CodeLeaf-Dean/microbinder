@@ -14,8 +14,8 @@
     <p>The style binder sets style properties on the element. Unlike most bindings, the style binding requires an object rather than a function. Each property on the object must be a style property. The style matching the property name is set to the result of the function.</p>
 
     <template id="template1">
-        <h2 bind="{style:{background:()=>this.isChecked?'blue':'inherit'}}">Check this box to toggle the background style of this header</h2>
-        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
+        <h2 bind="style:({background:()=>this.isChecked?'blue':'inherit'})">Check this box to toggle the background style of this header</h2>
+        <input type="checkbox" bind="checked:this.isChecked"/>
     </template>
 
     <script>

@@ -14,11 +14,11 @@
     <p>The textInput binder sets the value property of the element. It also listens for 'input' events to update the bound property. This means that unlike the value binder, the bound property will be updated on every key press.</p>
 
     <template id="template1">
-        <input type=text bind="{textInput: ()=>this.firstName}" /> 
-        <input type=text bind="{textInput: ()=>this.lastName}" />
+        <input type=text bind="textInput: this.firstName" /> 
+        <input type=text bind="textInput: this.lastName" />
         
-        <label bind="{text: ()=>this.firstName}"></label>
-        <label bind="{text: ()=>this.lastName}"></label>
+        <label bind="text: this.firstName"></label>
+        <label bind="text: this.lastName"></label>
     </template>
 
     <script>

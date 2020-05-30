@@ -15,17 +15,17 @@
 
     <template id="template1">
         <h2>Editable List</h2>
-        <ul bind="{foreach: ()=> this.people}">
+        <ul bind="foreach: this.people">
             <li>
-                <input type=text bind="{value: ()=>this.firstName}"/>
-                <input type=text bind="{value: ()=>this.lastName}"/>
+                <input type=text bind="value: firstName"/>
+                <input type=text bind="value: lastName"/>
             </li>
         </ul>
         <h2>ReadOnly List</h2>
-        <ul bind="{foreach: ()=> this.people}">
+        <ul bind="foreach: this.people">
             <li>
-                <label type=text bind="{text: ()=>this.firstName}"></label>
-                <label type=text bind="{text: ()=>this.lastName}"></label>
+                <label type=text bind="text: this.firstName"></label>
+                <label type=text bind="text: this.lastName"></label>
             </li>
         </ul>
     </template>

@@ -6,7 +6,7 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-      <style>.red{background: red;}</style>
+      <style>.red{background: red;}.blue{background: blue;}</style>
     <h1>The css binder</h1>
     <p>
         <a href="/examples.html">Back to examples</a>
@@ -15,8 +15,8 @@
     <p>The css binder toggles classes on the element. Unlike most bindings, the css binding requires an object rather than a function. Each property on the object must be a function that returns true or false. A class matching the property name is added to the element if the function returns true and is removed if it returns false.</p>
 
     <template id="template1">
-        <h2 bind="{css:{red:()=>this.isChecked}}">Check this box to add the red class to this header</h2>
-        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
+        <h2 bind="css:({red:()=>this.isChecked, blue:()=>!this.isChecked})">Check this box to remove the blue class and add the red class to this header</h2>
+        <input type="checkbox" bind="checked:this.isChecked"/>
     </template>
 
     <script>

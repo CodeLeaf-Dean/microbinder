@@ -15,16 +15,16 @@
 
     <template id="template1">
         <h2>ReadOnly List</h2>
-        <ul bind="{foreach: ()=>this.people}">
+        <ul bind="people">
             <li>
-                <label type=text bind="{text: ()=>this.firstName}"></label>
-                <label type=text bind="{text: ()=>this.lastName}"></label>
+                <label type=text bind="firstName"></label>
+                <label type=text bind="lastName"></label>
             </li>
         </ul>
 
-        <input type=text bind="{value: ()=>this.newFirstName}"/>
-        <input type=text bind="{value: ()=>this.newLastName}"/>
-        <button bind="{click: this.addPerson}">Add</button>
+        <input type=text bind="newFirstName"/>
+        <input type=text bind="newLastName"/>
+        <button bind="click: ()=>this.addPerson()">Add</button>
     </template>
 
     <script>

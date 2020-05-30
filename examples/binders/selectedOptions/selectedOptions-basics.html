@@ -14,17 +14,17 @@
     <p></p>
 
     <template id="template1">
-        <select multiple size="5" bind="{foreach:()=>this.food,selectedOptions:()=>this.selectedFood}">
-            <option bind="{text:()=>this.text,value:()=>this.value}"></option>
+        <select multiple size="5" bind="foreach:this.food,selectedOptions:this.selectedFood">
+            <option bind="text:this.text,value:this.value"></option>
         </select>
 
         <p>Selected options are: 
-            <ul bind="{foreach:()=>this.selectedFood}">
-                <li bind="{text:()=>this}"></li>
+            <ul bind="foreach:this.selectedFood">
+                <li bind="text:this"></li>
             </ul>
         </p>
 
-        <button bind="{click:()=>this.selectedFood = [1,4]}">Set selected options to pizza and burger</button>
+        <button bind="click:()=>this.selectedFood = [1,4]">Set selected options to pizza and burger</button>
     </template>
 
     <script>

@@ -15,8 +15,8 @@
 
     <template id="template1">
         <h2>The change the text in the text area to set the paragraph html below</h2>
-        <textarea bind="{value: ()=>this.paragraph}"></textarea>
-        <p bind="{html: ()=>this.paragraph}"></p>
+        <textarea bind="value: this.paragraph"></textarea>
+        <p bind="html: this.paragraph"></p>
     </template>
 
     <script>

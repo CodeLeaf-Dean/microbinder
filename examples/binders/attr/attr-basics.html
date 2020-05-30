@@ -15,7 +15,7 @@
 
     <template id="template1">
         <h2>The href and title attributes of the link below use the attr binder</h2>
-        <a target="_BLANK" bind="{attr: { href: ()=>this.href, title: ()=>this.title }}">Hyperlink</a>
+        <a target="_BLANK" bind="attr: ({ href: ()=>this.href, title: ()=>this.title })">Hyperlink</a>
     </template>
 
     <script>

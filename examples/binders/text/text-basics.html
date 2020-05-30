@@ -14,12 +14,12 @@
     <p>The text binder sets the innerText property of the element. This can be used to set the text of things like lables, paragraphs, spans etc. as seen below.</p>
 
     <template id="template1">
-        <h2>Lable</h2>
-        <label bind="{text: ()=>this.firstName}"></label>
+        <h2>Label</h2>
+        <label bind="text: this.firstName"></label>
         <h2>Paragraph</h2>
-        <p bind="{text: ()=>this.firstName}"></p>
+        <p bind="text: this.firstName"></p>
         <h2>Span</h2>
-        <span bind="{text: ()=>this.firstName}"></span>
+        <span bind="text: this.firstName"></span>
     </template>
 
     <script>

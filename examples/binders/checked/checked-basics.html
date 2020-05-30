@@ -14,9 +14,9 @@
     <p>The checked binder toggles the checked attribute of the element. This is used for binding to checkboxes.</p>
 
     <template id="template1">
-        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
+        <input type="checkbox" bind="checked:this.isChecked"/>
 
-        <p>The checkbox state is <span bind="{text: ()=>this.isChecked}"></span></p>
+        <p>The checkbox state is <span bind="text: this.isChecked"></span></p>
         
     </template>
 

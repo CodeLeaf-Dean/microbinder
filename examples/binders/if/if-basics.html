@@ -14,9 +14,9 @@
     <p>The if binder stops rendering the child nodes if the function returns false. This is used to add/remove content based on logic in your app. The example below toggles the h2 tag when you check the checkbox.</p>
 
     <template id="template1">
-        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
+        <input type="checkbox" bind="checked:this.isChecked"/>
 
-        <h2 bind="{if:()=>this.isChecked}">Click the checkbox to toggle me</h2>
+        <h2 bind="if:this.isChecked">Click the checkbox to toggle me</h2>
         
     </template>
 

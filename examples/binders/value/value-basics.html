@@ -14,13 +14,13 @@
     <p>The value binder sets the value property of the element. This is most commonly used for input elements that use the value attribute. In the examplpe below we are binding to a text input amd a date input. The date input required an iso date string value, so we have added a property to the class to handle this conversion.</p>
 
     <template id="template1">
-        <input type=text bind="{value: ()=>this.firstName}" /> 
-        <input type=text bind="{value: ()=>this.lastName}" />
-        <input type=date bind="{value: ()=>this.isoDate}" />
+        <input type=text bind="value: this.firstName" /> 
+        <input type=text bind="value: this.lastName" />
+        <input type=date bind="value: this.isoDate" />
 
-        <label bind="{text: ()=>this.firstName}"></label>
-        <label bind="{text: ()=>this.lastName}"></label>
-        <label bind="{text: ()=>this.date}"></label>
+        <label bind="text: this.firstName"></label>
+        <label bind="text: this.lastName"></label>
+        <label bind="text: this.date"></label>
     </template>
 
     <script>

@@ -14,11 +14,11 @@
     <p>The hasFocus binder toggles the focus of the element.</p>
 
     <template id="template1">
-        <input type="text" bind="{hasFocus:()=>this.isSelected}"/>
+        <input type="text" bind="hasFocus:isSelected"/>
 
-        <p>Does textbox have focus? <span bind="{text: ()=>this.isSelected}"></span></p>
+        <p>Does textbox have focus? <span bind="isSelected"></span></p>
         
-        <button bind="{click:()=>this.isSelected = true}">Set focus programatically</button>
+        <button bind="click:()=>this.isSelected = true">Set focus programatically</button>
     </template>
 
     <script>

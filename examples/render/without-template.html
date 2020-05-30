@@ -11,10 +11,12 @@
         <a href="/examples.html">Back to examples</a>
     </p>
 
-    <input type=text bind="{value: ()=>this.firstName}" /> 
-    <input type=text bind="{value: ()=>this.lastName}" />
-    <label bind="{text: ()=>this.firstName}"></label>
-    <label bind="{text: ()=>this.lastName}"></label>
+    <p>Rendering without a template is no longer supported.</p>
+
+    <input type=text bind="firstName" /> 
+    <input type=text bind="lastName" />
+    <label bind="firstName"></label>
+    <label bind="lastName"></label>
 
     <script>
         class Person {

@@ -20,10 +20,10 @@ class Person{
 
     <p>and your html could look like this...</p>
 
-    <textarea disabled rows=4 cols=70><input type=text bind="{textInput: ()=>this.firstName}" /> 
-<input type=text bind="{textInput: ()=>this.lastName}" />
-<label bind="{text: ()=>this.firstName}"></label>
-<label bind="{text: ()=>this.lastName}"></label></textarea>
+    <textarea disabled rows=4 cols=70><input type=text bind="firstName" /> 
+<input type=text bind="lastName" />
+<label bind="firstName"></label>
+<label bind="lastName"></label></textarea>
 
     <p>Notice the bind attribute. This always has to return an object. The properties on this object are the bindings to use. In this example we are using the text and value bindings. Every binding must be a function that returns the value to bind.</p>
     <p>We will put our html into a template element, our class in a script element, include the mb.js file, and finally call the mb.render() method. Our final document will look like this...</p>
@@ -37,10 +37,10 @@ class Person{
     </head>
     <body>
         <template id="t1">
-            <input type=text bind="{textInput: ()=>this.firstName}" /> 
-            <input type=text bind="{textInput: ()=>this.lastName}" />
-            <label bind="{text: ()=>this.firstName}"></label>
-            <label bind="{text: ()=>this.lastName}"></label>
+            <input type=text bind="firstName" /> 
+            <input type=text bind="lastName" />
+            <label bind="firstName"></label>
+            <label bind="lastName"></label>
         </template>
         <script>
             class Person {

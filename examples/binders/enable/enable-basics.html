@@ -14,9 +14,9 @@
     <p>The enable binder will add the disabled attribute if the bind function returns false and will remove it if it returns true.</p>
 
     <template id="template1">
-        <input type="checkbox" bind="{checked:()=>this.isChecked}"/>
-        <input type="text" bind="{enable:()=>this.isChecked}"/>
-        <p>The checkbox state is <span bind="{text: ()=>this.isChecked}"></span></p>
+        <input type="checkbox" bind="checked:this.isChecked"/>
+        <input type="text" bind="enable:this.isChecked"/>
+        <p>The checkbox state is <span bind="text: this.isChecked"></span></p>
         
     </template>
 

@@ -14,12 +14,12 @@
     <p>The with binder renders its children using the model returned by the function.</p>
 
     <template id="template1">
-        <div bind="{with:()=>{return {name:'inline object'}}}">
-            <h2 bind="{text:()=>this.name}"></h2>
+        <div bind="with:({name:'inline object'})">
+            <h2 bind="text:this.name"></h2>
         </div>
 
-        <div bind="{with:()=>this.subObject}">
-            <h2 bind="{text:()=>this.name}"></h2>
+        <div bind="with:this.subObject">
+            <h2 bind="text:this.name"></h2>
         </div>
     </template>
 
