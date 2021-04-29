@@ -5,27 +5,30 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>Render using a template element</h1>
-    <p>
-        <a href="/examples.html">Back to examples</a>
-    </p>
-
-    <template id="template1">
-        <input type=text bind="firstName" /> 
-        <input type=text bind="lastName" />
-        <label bind="firstName"></label>
-        <label bind="lastName"></label>
-    </template>
+    <h1>Tests</h1>
 
     <script type="module">
-        import mb from "/mb.debug.js"
-        class Person {
-            constructor() {
-                this.firstName = 'Dean';
-                this.lastName = 'North';
-            }
+        import BindingContext from '/src/BindingContext.js'
+        import MicroBinder from '/src/Compiler.js'
+
+        var test1 = function(){
+            var mb = new MicroBinder();
+            var o = { name: 'object1' };
+            o = mb.makeProxy(o);
+            var changeCount = 0;
+
+            var rootContext = new BindingContext(this, o);
+            mb.bind(rootContext, function(){ return o.name; }, function(o,v){ 
+                changeCount++;
+             }, o.name);
+
+            o.name = 'object2';
+            console.log(changeCount);
         }
-        mb.render(new Person(), document.body, "template1");
+
+        debugger;
+
+        test1();
     </script>
   </body>
 </html>
