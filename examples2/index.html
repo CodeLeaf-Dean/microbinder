@@ -5,21 +5,24 @@
     <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
   </head>
   <body>
-    <h1>Tests</h1>
+    <h1>The Bind Function</h1>
 
     <script type="module">
-        import MicroTester from '/test/MicroTester.js'
-        import MicroBinder from '/src2/MicroBinder.js'
-        import ObjectHandlerTests from '/test/ObjectHandler.Tests.js'
-        import DateHandlerTests from '/test/DateHandler.Tests.js'
-        import ArrayHandlerTests from '/test/ArrayHandler.Tests.js'
-        import BindTests from '/test/Bind.Tests.js'
+        import mb from "/dist/mb.debug.js"
+        //import mb from "/dist/mb.js"
+        class Person {
+            constructor() {
+                this.firstName = 'John';
+                this.lastName = 'Doe';
+                this.fullName = '';
+            }
+        }
 
-        var mt = new MicroTester();
-        mt.Run(new ObjectHandlerTests());
-        mt.Run(new DateHandlerTests());
-        mt.Run(new ArrayHandlerTests());
-        mt.Run(new BindTests());
+        var p = mb.wrap(new Person());
+        mb.bind(() => p.firstName + ' ' + p.lastName, v => p.fullName = v);
+        console.log('FullName is', p.fullName);
+        p.firstName = 'Jane';
+        console.log('FullName is', p.fullName);
     </script>
   </body>
 </html>

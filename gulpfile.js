@@ -1,16 +1,30 @@
-const { src, dest, parallel } = require('gulp');
-const concat = require('gulp-concat');
-//const replace = require('gulp-replace');
-//const uglify = require('gulp-uglify-es').default;
+const { series, parallel, src, dest } = require('gulp');
+const rollup = require('gulp-rollup');
 const terser = require('gulp-terser');
-//const uglify = require('gulp-uglify');
+const rename = require('gulp-rename');
 
-function js() {
-  return src('mb.debug.js', { sourcemaps: false })
-    .pipe(concat('mb.js'))
+function concat() {
+  return src('./src2/**/*.js')
+    .pipe(rollup({
+      input: './src2/mb.debug.js',
+      output:{
+        format: 'esm'
+      }
+    }))
+    .pipe(dest('dist/'));
+};
+
+function minify() {
+  return src('./src2/**/*.js')
+    .pipe(rollup({
+      input: './src2/mb.debug.js',
+      output:{
+        format: 'esm'
+      }
+    }))
     .pipe(terser({ mangle: { properties:{regex: /_.*/ }} }))
-    .pipe(dest('dist/', { sourcemaps: false }))
-}
+    .pipe(rename('mb.js'))
+    .pipe(dest('dist/'));
+};
 
-exports.js = js;
-exports.default = parallel(js);
+exports.default = parallel(concat, minify);
