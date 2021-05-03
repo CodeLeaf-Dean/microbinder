@@ -30,7 +30,7 @@ export default class MicroBinderCore {
     bind(readFunc, writeFunc, bindingContext, oldValue){
         this._calculatingDependancies = true;
         this._calculatedDependancies = []
-        var newValue = readFunc.call(bindingContext.$data);
+        var newValue = readFunc.call(bindingContext == null ? null : bindingContext.$data);
         this._calculatingDependancies = false;
         if(this._calculatedDependancies.length > 0){
             var bindingId = this._nextBindingId++;
