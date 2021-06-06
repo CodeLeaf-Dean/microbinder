@@ -13,7 +13,7 @@ export default class BindingContext{
     }
 
     get $index() {
-        if(mb._calculatingDependancies) mb._calculatedDependancies.push({handler: this._proxy.proxyHandler, prop: '$index'});
+        if(this.mb._calculatingDependancies) this.mb._calculatedDependancies.push({handler: this._proxy.proxyHandler, prop: '$index'});
         return this._proxy.$index;;
     }
     set $index(value) {

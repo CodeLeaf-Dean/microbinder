@@ -11,7 +11,6 @@ export default class DateHandler extends ObjectHandler {
                 var original = new Date(obj.valueOf());
                 var result = val.apply(obj, arguments);
                 if(obj != original){
-                    //this._notifySubscribers(prop, original, obj);
                     this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, original, obj);
                 }
                 return result;
@@ -20,6 +19,10 @@ export default class DateHandler extends ObjectHandler {
         return val;
     }
     set(obj, prop, val, proxy) {
-        return super.set(obj, prop, val, proxy);
+        var originalSettingValue = this.mb._settingValue;
+        this.mb._settingValue = false;
+        var result = super.set(obj, prop, val, proxy);
+        this.mb._settingValue = originalSettingValue;
+        return result;
     }
 }

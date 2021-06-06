@@ -6,10 +6,12 @@
     </head>
     <body>
         <template id="t1">
-            <input type=text bind=firstName /> 
-            <input type=text bind=lastName />
-            <label bind=firstName></label>
-            <label bind=lastName></label>
+            <ul bind=fruit>
+                <li>
+                    <span bind="$index"></span>
+                    <span bind="name + new Date().toLocaleTimeString()"></span>
+                </li>
+            </ul>
 
             <hr/>
 
@@ -27,12 +29,8 @@
                         <button bind="()=>test()">Test</button>
                         <button bind="()=>alert(name)">Alert Name</button>
                         <button bind="()=>$parent.edit(this)">Edit</button>
-                        <!-- <button bind="click:$parent.edit">This Context Broken Edit</button>
-                        <button bind="click:function(){$parent.edit($data)}">Edit3</button> -->
-
                         <button bind="()=>$parent.moveUp(this)">/\</button>
                         <button bind="()=>$parent.moveDown(this)">\/</button>
-
                         <button bind="()=>$parent.delete(this)">X</button>
                     </div>
 
@@ -42,10 +40,6 @@
                     </ul>
                 </li>
             </ul>
-
-            <hr/>
-            <ul bind=fruit><li bind="$index + ' - ' + name"></li></ul>
-
         </template>
         <script type="module">
             import MicroBinder from './src2/mb.debug.js'

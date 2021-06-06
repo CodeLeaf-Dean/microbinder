@@ -10,16 +10,18 @@
     <script type="module">
         import MicroTester from '/test/MicroTester.js'
         import MicroBinderCore from '/src2/MicroBinderCore.js'
-        import ObjectHandlerTests from '/test/ObjectHandler.Tests.js'
-        import DateHandlerTests from '/test/DateHandler.Tests.js'
-        import ArrayHandlerTests from '/test/ArrayHandler.Tests.js'
+        import ObjectHandlerTests from '/test/ProxyHandlers/ObjectHandler.Tests.js'
+        import DateHandlerTests from '/test/ProxyHandlers/DateHandler.Tests.js'
+        import ArrayHandlerTests from '/test/ProxyHandlers/ArrayHandler.Tests.js'
         import BindTests from '/test/Bind.Tests.js'
+        import ValueBinderTests from '/test/Binders/ValueBinder.Tests.js'
 
         var mt = new MicroTester();
         mt.Run(new ObjectHandlerTests());
         mt.Run(new DateHandlerTests());
         mt.Run(new ArrayHandlerTests());
         mt.Run(new BindTests());
+        mt.Run(new ValueBinderTests());
     </script>
   </body>
 </html>

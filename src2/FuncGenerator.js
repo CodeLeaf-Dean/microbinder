@@ -6,6 +6,8 @@ export default class FuncGenerator  {
             {match:"button",binder:"click"}
         ];
         this.subBinders = {if:1,with:1,foreach:1};
+        this.bindObjects = [];
+        this.bindObjectCount = -1;
     }
     
     generateRootInsertFunc(template){
@@ -177,7 +179,7 @@ export default class FuncGenerator  {
 
     buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset, nodesExistAlready){
         arr.maxDepth = 0;
-        arr.push("\nvar $mb = this;\n");
+        arr.push("\nvar $mb = $context.mb;\n");
         arr.push("\nvar t = null;\n"); //, $index = null, $parent = null,$data = null;\n");
         arr.push("var renderedElements = [];\n");
 
@@ -198,6 +200,12 @@ export default class FuncGenerator  {
         arr.push("    $funcElement.bindArray[$context.$index] = renderedElements;\n");
         arr.push("}\n");
         return arr;
+    }
+
+    buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj, offset){
+        var arr = [];
+        this.buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
+        return new Function('$context,n0,$funcElement', arr.join(''));
     }
 
     executeBindingsFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
@@ -231,7 +239,7 @@ export default class FuncGenerator  {
                         }
                         if(!v.startsWith("{")) v = "{" + v + "}";
                         // Wrap all bind attribute object propeties with functions
-                        var fakeContext = {$data:new Proxy(function() {}, new FunctionTester()),$index: ()=>0};
+                        var fakeContext = {$data:new FunctionTester(),$index: ()=>0};
                         var bindObject = new Function("$context", "with($context){with($data){ return " + v + "}}").call(fakeContext.$data, fakeContext);
                         for (const key in bindObject) {
                             v = v.replace(new RegExp(key + "\s*:"), key + ": ()=> ");
@@ -241,10 +249,10 @@ export default class FuncGenerator  {
                         stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
                         var bindObjectIndex = funcIndex;
                         if(stop){
-                            //this.bindObjects.push(this._buildInsertFunc(e.childNodes, this.bindObjects.length + 1));
+                            this.bindObjects.push(this.buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjects.length + 1));
                             this.bindObjectCount ++;
                             bindObjectIndex = this.bindObjectCount;
-                            bindObjectArr[this.bindObjectCount] = { code: ['\n    $mb.bindObjects[',this.bindObjectCount,'] = ', this._buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjectCount, source, mapObj, true), ';\n']};
+                            bindObjectArr[this.bindObjectCount] = { code: ['\n    $mb.bindObjects[',this.bindObjectCount,'] = ', this.buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjectCount, source, mapObj, true), ';\n']};
                         }
                         arr.push("{");
 
@@ -295,15 +303,21 @@ export default class FuncGenerator  {
 }
 
 /// This class is used to create a js object from the binding string so that we can get a list of its used properties. 
-class FunctionTester {
-    has(obj, prop) {return true;}
-    get(obj, prop, proxy) {
+function FunctionTester() {
+    this.has = function(obj, prop) {
+        return true;
+    }
+    this.get = function(obj, prop, proxy) {
         if(prop == Symbol.unscopables) 
             return {};
         if(prop == Symbol.toPrimitive || prop == "toString")
             return ()=>"";
-        return proxy;
+        return new FunctionTester();
     }
-    set(obj, prop, val, proxy) {}
-    apply(obj, thisArg, argumentsList) {return this;}
+    this.set = function(obj, prop, val, proxy) {}
+    this.apply = function(obj, thisArg, argumentsList) {
+        return new FunctionTester();
+    }
+
+    return new Proxy(function() {}, this);
 }

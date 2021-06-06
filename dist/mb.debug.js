@@ -44,8 +44,7 @@ class ObjectHandler {
             }
         }
 
-        if(//!(this instanceof DateHandler) && 
-        this.mb._settingValue){
+        if(this.mb._settingValue){
             this.mb._setStack.push((v)=>proxy[prop]=v);
         }
 
@@ -108,7 +107,6 @@ class DateHandler extends ObjectHandler {
                 var original = new Date(obj.valueOf());
                 var result = val.apply(obj, arguments);
                 if(obj != original){
-                    //this._notifySubscribers(prop, original, obj);
                     this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, original, obj);
                 }
                 return result;
@@ -117,7 +115,11 @@ class DateHandler extends ObjectHandler {
         return val;
     }
     set(obj, prop, val, proxy) {
-        return super.set(obj, prop, val, proxy);
+        var originalSettingValue = this.mb._settingValue;
+        this.mb._settingValue = false;
+        var result = super.set(obj, prop, val, proxy);
+        this.mb._settingValue = originalSettingValue;
+        return result;
     }
 }
 
@@ -312,7 +314,7 @@ class MicroBinderCore {
     bind(readFunc, writeFunc, bindingContext, oldValue){
         this._calculatingDependancies = true;
         this._calculatedDependancies = [];
-        var newValue = readFunc.call(bindingContext.$data);
+        var newValue = readFunc.call(bindingContext == null ? null : bindingContext.$data);
         this._calculatingDependancies = false;
         if(this._calculatedDependancies.length > 0){
             var bindingId = this._nextBindingId++;

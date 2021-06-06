@@ -44,8 +44,7 @@ export default class ObjectHandler {
             }
         }
 
-        if(//!(this instanceof DateHandler) && 
-        this.mb._settingValue){
+        if(this.mb._settingValue){
             this.mb._setStack.push((v)=>proxy[prop]=v);
         }
 

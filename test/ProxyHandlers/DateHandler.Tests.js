@@ -1,5 +1,5 @@
-import MicroTester from './MicroTester.js'
-import MicroBinder from '../src2/MicroBinderCore.js'
+import MicroTester from '../MicroTester.js'
+import MicroBinder from '../../src2/MicroBinderCore.js'
 
 var mt = new MicroTester();
 

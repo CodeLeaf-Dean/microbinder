@@ -1,4 +1,5 @@
 import ObjectHandler from './ObjectHandler.js'
+import BindingContext from './../BindingContext.js'
 
 export default class ArrayHandler extends ObjectHandler {
     constructor(mb, prop, proxy) {

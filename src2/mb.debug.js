@@ -1,8 +1,9 @@
 import MicroBinderCore from './MicroBinderCore.js'
 import BindingContext from './BindingContext.js'
 import FuncGenerator from './FuncGenerator.js'
+import ForEachBinder from './Binders/ForEachBinder.js'
 
-class MicroBinder extends MicroBinderCore {
+export default class MicroBinder extends MicroBinderCore {
 
     constructor() {
         super();
@@ -97,7 +98,7 @@ class MicroBinder extends MicroBinderCore {
             enter:(e, c, js)=>{e.addEventListener("keypress", (event) => {if(event.keyCode === 13){js()(c.$data, event)}});},
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
             if: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi];
+                e.insertFunc = this.funcGen.bindObjects[boi];
                 e.$context = c;
                 e._if = false;
                 this.bind(js, (v,o) => {
@@ -113,7 +114,7 @@ class MicroBinder extends MicroBinderCore {
                 }, c);
             },
             with: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi];
+                e.insertFunc = this.funcGen.bindObjects[boi];
                 e.$context = c;
                 this.bind(js, (v,o) => {
                     e.innerHTML = "";
@@ -123,23 +124,7 @@ class MicroBinder extends MicroBinderCore {
                     e.appendChild(frag);
                 }, c);
             },
-            foreach: (e, c, js, boi)=>{ 
-                e.insertFunc = this.bindObjects[boi];
-                e.$context = c;
-                var arr = js.call(c.$data);
-                e.$array = arr;
-                e.bindArray = [];
-                arr.proxyHandler._bindElements.push(e);
-                var frag = document.createDocumentFragment();
-                for (let index = 0; index < arr.length; index++) {
-                    const item = arr[index];
-                    if(arr.childContexts[index] == null){
-                        arr.childContexts[index] = new BindingContext(this,item,index,c);
-                    }
-                    e.insertFunc.call(item, arr.childContexts[index], frag, e);
-                }
-                e.appendChild(frag);
-            },
+            foreach: ForEachBinder,
             selectedOptions:(e,c,js)=>{
                 this.bind(js, (v,o) => {
                     var vs = v.map(s=>s.toString());
@@ -164,7 +149,7 @@ class MicroBinder extends MicroBinderCore {
             disable:(e,c,js)=>{
                 this.bind(js, (v,o) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'), c);      
             }
-        }
+        };
     }
 
     applyBindings(model,rootElement, template){
@@ -208,4 +193,4 @@ class MicroBinder extends MicroBinderCore {
     }
 }
 
-export default new MicroBinder();
+//export default new MicroBinder();

@@ -36,12 +36,14 @@ export default class MicroBinderCore {
             var bindingId = this._nextBindingId++;
             this._bindings[bindingId] = [];
             this._calculatedDependancies.forEach(x=>{
-                var sub = x.handler._subscribe(x.prop, (n,o)=>{
-                    this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
-                    delete this._bindings[bindingId];
-                    this.bind(readFunc, writeFunc, bindingContext, o);
-                }, readFunc, bindingId);
-                if(sub) this._bindings[bindingId].push(sub);
+                if(x.handler){
+                    var sub = x.handler._subscribe(x.prop, (n,o)=>{
+                        this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
+                        delete this._bindings[bindingId];
+                        this.bind(readFunc, writeFunc, bindingContext, o);
+                    }, readFunc, bindingId);
+                    if(sub) this._bindings[bindingId].push(sub);
+                }
             });
         }
         if(arguments.length < 4){
