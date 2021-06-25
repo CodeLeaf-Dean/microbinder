@@ -2,7 +2,7 @@ import BindingContext from './../BindingContext.js'
 
 export default function ForEachBinder(e, c, js, boi)
 { 
-    e.insertFunc = c.mb.funcGen.bindObjects[boi];
+    e.insertFunc = c.mb.bindObjects[boi];
     e.$context = c;
     var arr = js.call(c.$data);
     e.$array = arr;

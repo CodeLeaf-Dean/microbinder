@@ -139,6 +139,13 @@ export default class ArrayHandler extends ObjectHandler {
                     return result;
                 }.bind(this);
             }
+            if(prop === 'indexOf') {
+                return function (el) {
+                    arguments[0] = this.mb.unwrap(arguments[0]);
+                    var result = Array.prototype.indexOf.apply(obj, arguments);
+                    return result;
+                }.bind(this);
+            }
     
             return val.bind(proxy);
         }

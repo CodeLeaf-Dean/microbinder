@@ -2,12 +2,23 @@ import MicroBinderCore from './MicroBinderCore.js'
 import BindingContext from './BindingContext.js'
 import FuncGenerator from './FuncGenerator.js'
 import ForEachBinder from './Binders/ForEachBinder.js'
+import ComponentBinder from './Binders/ComponentBinder.js'
 
 export default class MicroBinder extends MicroBinderCore {
 
     constructor() {
         super();
-        this.funcGen = new FuncGenerator();
+        var self = this;
+        this.components = {
+            register:function(name, componentDescriptor){
+                this[name] = componentDescriptor;
+                this[name].insertFunc = self.build(componentDescriptor.template).then(insertFunc => {
+                    this[name].insertFunc = insertFunc;
+                });
+                return this[name].insertFunc;
+            }
+        };
+        this.funcGen = new FuncGenerator(this);
         this.binders = {
             text:(e, c, js)=>this.bind(js, (v,o) => e.innerText = v, c),
             html:(e, c, js)=>this.bind(js, (v,o) => e.innerHTML = v, c),
@@ -34,8 +45,25 @@ export default class MicroBinder extends MicroBinderCore {
             css:(e,c,js)=>{
                 // Add a binding for each css class
                 var jsobj = js();
-                for (const key in jsobj) {
-                    this.bind(jsobj[key], (v,o) => v?e.classList.add(key):e.classList.remove(key), c);
+                if(typeof jsobj == "string"){
+                    this.bind(js, (v,o) => {
+                        if(typeof o == "string"){
+                            o.split(' ').forEach(x=>{
+                                if(x != "")
+                                    e.classList.remove(x)
+                            });
+                        } else {
+                            //debugger;
+                        }
+                        v.split(' ').forEach(x=>{
+                            if(x != "")
+                                e.classList.add(x)
+                        });
+                    }, c);
+                } else {
+                    for (const key in jsobj) {
+                        this.bind(jsobj[key], (v,o) => v?e.classList.add(key):e.classList.remove(key), c);
+                    }
                 }
             },
             attr:(e,c,js)=>{
@@ -94,11 +122,11 @@ export default class MicroBinder extends MicroBinderCore {
                 }
             },
             visible: (e, c, js)=> this.bind(js, (v,o) => e.style.display = v ? null : "none", c),
-            click: (e, c, js)=> e.addEventListener("click", (event) => js()(c.$data, event)),
+            click: (e, c, js)=> e.addEventListener("click", (event) => js().call(c.$data, c.$data, event)),
             enter:(e, c, js)=>{e.addEventListener("keypress", (event) => {if(event.keyCode === 13){js()(c.$data, event)}});},
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
             if: (e, c, js, boi) => {
-                e.insertFunc = this.funcGen.bindObjects[boi];
+                e.insertFunc = this.bindObjects[boi];
                 e.$context = c;
                 e._if = false;
                 this.bind(js, (v,o) => {
@@ -125,6 +153,7 @@ export default class MicroBinder extends MicroBinderCore {
                 }, c);
             },
             foreach: ForEachBinder,
+            component: ComponentBinder,
             selectedOptions:(e,c,js)=>{
                 this.bind(js, (v,o) => {
                     var vs = v.map(s=>s.toString());
@@ -140,7 +169,7 @@ export default class MicroBinder extends MicroBinderCore {
                 var jsobj = js();
                 for (const key in jsobj) {
                     const element = jsobj[key];
-                    e.addEventListener(key, (event) => element.call(c, e));
+                    e.addEventListener(key, (event) => element.call(c.$data, e, event));
                 }
             },
             enable:(e,c,js)=>{
@@ -150,6 +179,9 @@ export default class MicroBinder extends MicroBinderCore {
                 this.bind(js, (v,o) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'), c);      
             }
         };
+        this.subBinders = {if:1,with:1,foreach:1};
+        this.bindObjects = [];
+        this.bindObjectCount = -1;
     }
 
     applyBindings(model,rootElement, template){

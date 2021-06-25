@@ -1,13 +1,11 @@
 export default class FuncGenerator  {
-    constructor() {
+    constructor(mb) {
         this.defaultBinders = [
             {match:"input[type=text]",binder:"textInput"},
             {match:"ul",binder:"foreach"},
             {match:"button",binder:"click"}
         ];
-        this.subBinders = {if:1,with:1,foreach:1};
-        this.bindObjects = [];
-        this.bindObjectCount = -1;
+        this.mb = mb;
     }
     
     generateRootInsertFunc(template){
@@ -88,7 +86,7 @@ export default class FuncGenerator  {
         }
 
         arr.push("\n");
-        arr.push("//# sourceMappingURL=data:text/plain;base64,");
+        //arr.push("//# sourceMappingURL=data:text/plain;base64,");
         
         const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -170,11 +168,13 @@ export default class FuncGenerator  {
             "sourcesContent": [source]
         };
 
-        arr.push(btoa(JSON.stringify(sourceMap)));
-        arr.push("\n");
-        arr.push("//# sourceURL=" + sourceName + ".template.js");
+        //arr.push(btoa(JSON.stringify(sourceMap)));
+        //arr.push("\n");
+        //arr.push("//# sourceURL=" + sourceName + ".template.js");
 
-        return new Function('$context,n0,$funcElement', arr.join(''));
+        var f = new Function('$context,n0,$funcElement', arr.join(''));
+        console.log(f);
+        return f;
     }
 
     buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset, nodesExistAlready){
@@ -205,7 +205,9 @@ export default class FuncGenerator  {
     buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj, offset){
         var arr = [];
         this.buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
-        return new Function('$context,n0,$funcElement', arr.join(''));
+        var f = new Function('$context,n0,$funcElement', arr.join(''));
+        console.log(f);
+        return f;
     }
 
     executeBindingsFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
@@ -221,7 +223,11 @@ export default class FuncGenerator  {
     buildInsertFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
         var stop = false;
         if(e.nodeType == 1){
-            arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            if(e.nodeName == 'VIRTUAL'){
+                arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createDocumentFragment();\n");
+            } else {
+                arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
 
             //arr.push("$context.$element = n", depth ,";\n");
@@ -246,13 +252,13 @@ export default class FuncGenerator  {
                         }
 
                         // check if the bind object has a binder that controls its children
-                        stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
+                        stop = Object.keys(bindObject).some(r=> Object.keys(this.mb.subBinders).indexOf(r) >= 0);
                         var bindObjectIndex = funcIndex;
                         if(stop){
-                            this.bindObjects.push(this.buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjects.length + 1));
-                            this.bindObjectCount ++;
-                            bindObjectIndex = this.bindObjectCount;
-                            bindObjectArr[this.bindObjectCount] = { code: ['\n    $mb.bindObjects[',this.bindObjectCount,'] = ', this.buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjectCount, source, mapObj, true), ';\n']};
+                            this.mb.bindObjects.push(this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjects.length + 1));
+                            this.mb.bindObjectCount ++;
+                            bindObjectIndex = this.mb.bindObjectCount;
+                            bindObjectArr[bindObjectIndex] = { code: ['\n    $mb.bindObjects[',this.mb.bindObjectCount,'] = ', this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjectCount, source, mapObj, true), ';\n']};
                         }
                         arr.push("{");
 
@@ -275,15 +281,26 @@ export default class FuncGenerator  {
                         }
 
                         arr.push("$mb.executeBinding(n", depth, ", $context, (function(){with($context){with($data??{}){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($context.$data), ", bindObjectIndex, ");\n");
-                        arr.push('}');
+
+                        if(e.nodeName == 'VIRTUAL'){
+                            
+                        }
+                        arr.push('}\n');
+                    } else if(a == 'class'){
+                        arr.push("n", depth, ".classList.add('", v, "');\n");
                     } else {
                         arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
                     }
                 }
             }
 
-            arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
-            if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
+            if(e.nodeName == 'VIRTUAL'){
+                if(depth-1==0)arr.push("renderedElements.push.apply(renderedElements, Array.from(n", depth, ".childNodes));\n\n");
+                arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+            } else {
+                arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+                if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
+            }
         }
         else if(e.nodeType == 3){
             arr.push("t = document.createTextNode(`", e.nodeValue.replace(/\\/g, "\\\\"), "`);\n");

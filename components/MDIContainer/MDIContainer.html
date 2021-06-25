@@ -1,0 +1,13 @@
+<div class="mdi" bind="style:({
+    'grid-template-areas':()=>gridTemplateAreas(),
+    'grid-template-rows':()=>gridTemplateRows(),
+    'grid-template-columns':()=>gridTemplateColumns()
+    }),foreach:panels">
+    <virtual bind="component:({name:$data.name, params: $data})"></virtual>
+</div>
+
+<div class="debug">
+    <pre bind="text: gridTemplateAreas()"></pre>
+    <pre bind="text: gridTemplateColumns()"></pre>
+    <pre bind="text: gridTemplateRows()"></pre>
+</div>

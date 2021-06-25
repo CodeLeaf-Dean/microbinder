@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
+        <meta charset="utf-8"/>
+        <link id="mdicontainer-template" href="/components/MDIContainer/MDIContainer.html" rel="preload" as="fetch" crossorigin="anonymous" />
+        <link id="mdiwindow-template" href="/components/MDIContainer/MDIWindow.html" rel="preload" as="fetch" crossorigin="anonymous" />
+    </head>
+    <body>
+        <style>
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.mdi {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+}
+
+.full-panel{
+    position:relative;
+    box-shadow: inset 0 0 1px #000;
+    overflow: hidden;
+}
+
+.full-panel.l{
+    padding-left:6px;
+}
+
+.full-panel.l:before{
+    content:"";
+    position: absolute;
+    top: 0;
+    width: 6px;
+    bottom: 0;
+    left: 0;
+    background: grey;
+    cursor: ew-resize;
+}
+
+.full-panel.t{
+    padding-top:6px;
+}
+
+.full-panel.t:after{
+    content:"";
+    position: absolute;
+    top: 0;
+    height: 6px;
+    left: 0;
+    right: 0;
+    background: grey;
+    cursor: ns-resize;
+}
+
+.debug {
+    position: absolute;
+    top: 0;
+    right: 0;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    min-width: 300px;
+}
+        </style>
+        <template id="root">
+            <virtual bind="component:({'name':'mdi-container', params: $data})"></virtual>
+        </template>
+        <script type="module">
+            import MicroBinder from './src2/mb.debug.js'
+            import MDIContainer from './components/MDIContainer/MDIContainer.js'
+            import MDIWindow from './components/MDIContainer/MDIWindow.js'
+            var mb = new MicroBinder();
+
+            await mb.components.register('mdi-window', {template:'mdiwindow-template', viewModel: MDIWindow});
+            await mb.components.register('mdi-container', {template:'mdicontainer-template', viewModel: MDIContainer});
+
+            class MDIExample {
+                constructor() {
+                    
+                }
+            }
+            mb.applyBindings(new MDIExample(), document.body, 'root');
+        </script>
+    </body>
+</html>

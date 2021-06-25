@@ -3,6 +3,7 @@
     <head>
         <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
         <meta charset="utf-8"/>
+        <link id="mdicontainer-template" href="/components/MDIContainer/MDIContainer.html" rel="preload" as="fetch" crossorigin="anonymous" />
     </head>
     <body>
         <template id="t1">
@@ -47,6 +48,14 @@
             <ul bind=fruit><li bind="$index + ' - ' + name"></li></ul>
 
         </template>
+
+        <template id="mb-person-template">
+            <input type=text bind=firstName /> 
+            <input type=text bind=lastName />
+            <label bind=firstName></label>
+            <label bind=lastName></label>
+        </template>
+
         <script type="module">
             import MicroBinder from './src2/mb.debug.js'
             var mb = new MicroBinder();

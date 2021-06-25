@@ -38,6 +38,17 @@ export default class ArrayHandlerTests {
         mt.Assert('object1 child1,child3', result);
     }
 
+    map_should_trigger_when_child_replaced(){
+        var mb = new MicroBinder();
+        var o = { name: 'object1', children:['child1','child2'] };
+        o = mb.wrap(o);
+        var result = null;
+        mb.bind(()=>o.name + ' ' + o.children.map(c=>c).join(), v => result = v);
+        mt.Assert('object1 child1,child2', result);
+        o.children[1] = "child3";
+        mt.Assert('object1 child1,child3', result);
+    }
+
     splice_should_notify_subscribers_when_inserting(){
         var mb = new MicroBinder();
         var o = { name: 'object1', children:[{name:'child1'}, {name:'child3'}] };
@@ -192,4 +203,22 @@ export default class ArrayHandlerTests {
         mt.Assert('object1 child1', result);
     }
 
+    set_length_should_notify_computed_subscribers(){
+        var mb = new MicroBinder();
+        var o = { 
+            name: 'object1', 
+            children:[{name:'child1'},{name:'child2'}], 
+            childrenNames: function () {
+                return this.children.map(c => c.name).join(',');
+            } 
+        };
+        o = mb.wrap(o);
+        var result = null;
+        mb.bind(()=>o.childrenNames(), v => result = v);
+        mt.Assert('child1,child2', result);
+        o.children.length = 1;
+        mt.Assert('child1', result);
+        o.children.push({name:'child3'});
+        mt.Assert('child1,child3', result);
+    }
 }

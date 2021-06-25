@@ -1,0 +1,13 @@
+<div class="full-panel" bind="css:handle(),style:({'grid-area': ()=>model.area}),event:({mousedown:mouseDown})">
+    <span bind="text:model.area"></span>
+    <span bind="text:handle()"></span>
+    <br/>
+    <span bind="text:areaObject.areaStartX"></span>
+    <span bind="text:areaObject.areaEndX"></span>
+    <br/>
+    <span bind="text:areaObject.areaStartY"></span>
+    <span bind="text:areaObject.areaEndY"></span>
+    <button bind="click:splitX">SplitX</button>
+    <button bind="click:splitY">SplitY</button>
+    <button bind="click:close">Close</button>
+</div>

@@ -16,8 +16,15 @@ export default class MicroBinderCore {
         if(model._isProxy)
             return model;
 
+        if(model.___proxy != null)
+            return model.___proxy;
+
         var handler = Object.prototype.toString.call(model) === '[object Date]' ? new DateHandler(this) : Array.isArray(model) ? new ArrayHandler(this,null,model) : new ObjectHandler(this);
-        return new Proxy(model, handler);
+        var newProxy = new Proxy(model, handler);
+
+        model.___proxy = newProxy;
+
+        return newProxy;
     }
 
     unwrap(model){
@@ -51,5 +58,25 @@ export default class MicroBinderCore {
         } else{
             writeFunc(newValue, oldValue);
         }
+    }
+
+    computed(func, thisContext){
+        var mb = this;
+        var wrappedThis = mb.wrap(thisContext);
+        var temp = mb.wrap({value:undefined});
+        var returnFunc = function(){
+            return temp.value;
+        }
+
+        mb.bind(
+            (func).bind(wrappedThis), 
+            (function(v){
+                if(temp.value != v){
+                    temp.value = v;
+                }
+            }).bind(wrappedThis)
+        );
+
+        return returnFunc;
     }
 }
