@@ -1,7 +1,7 @@
 export default class MicroTester {
     constructor() {
         this.Assert = function(expected, actual){
-            if(expected != actual){
+            if(JSON.stringify(expected) != JSON.stringify(actual)){
                 throw new Error( 'Expected "' + expected + '" actual "' + actual + '"');
             }
         };

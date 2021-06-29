@@ -1,3 +1,5 @@
+import GridTemplate from './GridTemplate.js'
+
 var Panel = function (root, area) {
     this.root = root;
     this.name = 'mdi-window';
@@ -7,6 +9,16 @@ var Panel = function (root, area) {
 export default class MDIContainer {
     constructor(mb, params) {
         var self = this;
+
+        this.gridTemplate = new GridTemplate(`"w0 w1 w1 w2 w2 w2 w11"
+            "w0 w4 w4 w4 w4 w5 w11"
+            "w0 w12 w12 w12 w12 w5 w11"
+            "w0 w12 w12 w12 w12 w13 w11"
+            "w0 w7 w7 w7 w8 w8 w11"
+            "w9 w9 w10 w10 w10 w10 w11"`, 
+            [100, 100, 50, 50, 75, 50], 
+            [150, 100, 150, 50, 150, 100, 50]);
+
         this.areas = [
             ["w0", "w1", "w1", "w2", "w2", "w2", "w11"],
             ["w0", "w4", "w4", "w4", "w4", "w5", "w11"],
@@ -68,10 +80,10 @@ export default class MDIContainer {
 
         //this.lastAreaIndex = Object.keys(this.logicalAreas).length;
 
-        this.rows = [100, 100, 50, 50, 75, 50];
-        this.columns = [150, 100, 150, 50, 150, 100, 50];
+        //this.rows = [100, 100, 50, 50, 75, 50];
+        //this.columns = [150, 100, 150, 50, 150, 100, 50];
 
-        this.calculateLogicalAreas();
+        //this.calculateLogicalAreas();
 
         this.panels = [];
 
@@ -107,9 +119,10 @@ export default class MDIContainer {
             }).join(' ');
         };*/
 
-        this.gridTemplateRows = mb.computed(function(){return this.rows.map(r => r + 'px').join(' ')}, this);
-        this.gridTemplateColumns = mb.computed(function(){return this.columns.map(r => r + 'px').join(' ')}, this);
-
+        this.gridTemplateRows = mb.computed(function(){return this.gridTemplate.rowArray.map(r => r + 'px').join(' ')}, this);
+        this.gridTemplateColumns = mb.computed(function(){return this.gridTemplate.columnArray.map(r => r + 'px').join(' ')}, this);
+        this.gridTemplateAreas = mb.computed(function (){return this.gridTemplate.getAreaString();}, this);
+        
         // var wrappedThis = mb.wrap(this);
         // mb.bind(
         //     (function(){return this.columns.map(r => r + 'px').join(' ')}).bind(wrappedThis), 
@@ -143,9 +156,9 @@ export default class MDIContainer {
         //     }).join(' ');
         // };
 
-        this.gridTemplateAreas = mb.computed(function () {
-            return this.areas.map(r => "'" + r.join(' ') + "'").join('\n');
-        }, this);
+        // this.gridTemplateAreas = mb.computed(function () {
+        //     return this.areas.map(r => "'" + r.join(' ') + "'").join('\n');
+        // }, this);
 
         this.swapAreasX = function (areasToSwap) {
             areasToSwap.forEach(areaToSwap => {
@@ -153,12 +166,18 @@ export default class MDIContainer {
                     this.areas[sY][areaToSwap.areaEndX] = this.areas[sY][areaToSwap.areaEndX + 1];
                 }
 
+                console.log(areaToSwap);
+                //this.logicalAreas[areaToSwap.name].areaEndX -= 1;
+                //this.logicalAreas[this.areas[sY][areaToSwap.areaEndX + 1]].areaStartX -= 1;
+
                 for (var key in this.logicalAreas) {
                     if (this.logicalAreas[key].areaStartX == areaToSwap.areaEndX) {
                         var areaToLeft = this.logicalAreas[key];
                         for (var sY = areaToLeft.areaStartY; sY <= areaToLeft.areaEndY; sY++) {
                             if(this.areas[sY][areaToLeft.areaStartX - 1] != areaToSwap.name){
                                 this.areas[sY][areaToLeft.areaStartX] = this.areas[sY][areaToLeft.areaStartX - 1];
+                                //this.logicalAreas[areaToLeft.name].areaStartX += 1;
+                                //this.logicalAreas[areaToSwap.name].areaEndX += 1;
                             }
                         }
                     }
