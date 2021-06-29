@@ -28,7 +28,6 @@ export default class MDIWindow {
                 return this.mouseMoveY(e);
             }
         } else if(e.type === "mouseup"){
-            console.log('up');
             return this.mouseUp();
         }
     }
@@ -60,7 +59,6 @@ export default class MDIWindow {
             window.addEventListener('mousemove', this, false);
             window.addEventListener('mouseup', this, false);
             document.body.style.cursor = 'ew-resize';
-            console.log('Resizing column', this.columnBeingSized);
         }
         
         if(e.stopPropagation) e.stopPropagation();

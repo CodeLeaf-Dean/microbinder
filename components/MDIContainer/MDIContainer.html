@@ -2,12 +2,24 @@
     'grid-template-areas':()=>gridTemplateAreas(),
     'grid-template-rows':()=>gridTemplateRows(),
     'grid-template-columns':()=>gridTemplateColumns()
-    }),foreach:panels">
-    <virtual bind="component:({name:$data.name, params: $data})"></virtual>
+    })">
+    <virtual bind="foreach:panels">
+        <virtual bind="component:({name:$data.name, params: $data})"></virtual>
+    </virtual>
+    <!-- <virtual bind="if:gridTemplate.showGrid"> -->
+        <virtual bind="for:gridTemplate.rowCount">
+            <virtual bind="for:gridTemplate.columnCount">
+                <div class="debug-area" bind="style:({'grid-column':()=>$index+1,'grid-row':()=>$parentContext.$index+1})">
+                    <span bind="$index+1 + ',' + ($parentContext.$index+1)"></span>
+                </div>
+            </virtual>
+        </virtual>
+    <!-- </virtual> -->
 </div>
 
 <div class="debug">
     <pre bind="text: gridTemplateAreas()"></pre>
     <pre bind="text: gridTemplateColumns()"></pre>
     <pre bind="text: gridTemplateRows()"></pre>
+    <input type="checkbox" bind="checked:showGrid" />
 </div>

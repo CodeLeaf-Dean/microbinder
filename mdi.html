@@ -65,6 +65,14 @@ body {
     background: rgba(0, 0, 0, 0.5);
     min-width: 300px;
 }
+
+.debug-area {
+    background: #ff00002b;
+    border: 1px dashed red;
+    display: grid;
+    justify-content: center;
+    align-content: center;
+}
         </style>
         <template id="root">
             <virtual bind="component:({'name':'mdi-container', params: $data})"></virtual>

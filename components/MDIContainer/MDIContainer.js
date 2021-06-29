@@ -9,7 +9,7 @@ var Panel = function (root, area) {
 export default class MDIContainer {
     constructor(mb, params) {
         var self = this;
-
+        this.showGrid = false;
         this.gridTemplate = new GridTemplate(`"w0 w1 w1 w2 w2 w2 w11"
             "w0 w4 w4 w4 w4 w5 w11"
             "w0 w12 w12 w12 w12 w5 w11"
@@ -122,7 +122,7 @@ export default class MDIContainer {
         this.gridTemplateRows = mb.computed(function(){return this.gridTemplate.rowArray.map(r => r + 'px').join(' ')}, this);
         this.gridTemplateColumns = mb.computed(function(){return this.gridTemplate.columnArray.map(r => r + 'px').join(' ')}, this);
         this.gridTemplateAreas = mb.computed(function (){return this.gridTemplate.getAreaString();}, this);
-        
+
         // var wrappedThis = mb.wrap(this);
         // mb.bind(
         //     (function(){return this.columns.map(r => r + 'px').join(' ')}).bind(wrappedThis), 

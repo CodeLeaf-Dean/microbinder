@@ -1,6 +1,7 @@
 import MicroBinderCore from './MicroBinderCore.js'
 import BindingContext from './BindingContext.js'
 import FuncGenerator from './FuncGenerator.js'
+import ForBinder from './Binders/ForBinder.js'
 import ForEachBinder from './Binders/ForEachBinder.js'
 import ComponentBinder from './Binders/ComponentBinder.js'
 
@@ -152,6 +153,7 @@ export default class MicroBinder extends MicroBinderCore {
                     e.appendChild(frag);
                 }, c);
             },
+            for: ForBinder,
             foreach: ForEachBinder,
             component: ComponentBinder,
             selectedOptions:(e,c,js)=>{
@@ -179,7 +181,7 @@ export default class MicroBinder extends MicroBinderCore {
                 this.bind(js, (v,o) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'), c);      
             }
         };
-        this.subBinders = {if:1,with:1,foreach:1};
+        this.subBinders = {if:1,with:1,foreach:1,for:1};
         this.bindObjects = [];
         this.bindObjectCount = -1;
     }
