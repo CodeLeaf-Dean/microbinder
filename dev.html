@@ -6,6 +6,11 @@
         <link id="mdicontainer-template" href="/components/MDIContainer/MDIContainer.html" rel="preload" as="fetch" crossorigin="anonymous" />
     </head>
     <body>
+        <style>
+            .virtual{
+                background: green;
+            }
+        </style>
         <template id="t1">
             <input type=text bind=firstName /> 
             <input type=text bind=lastName />
@@ -56,6 +61,39 @@
             <label bind=lastName></label>
         </template>
 
+        <template id="t2">
+            <input type="checkbox" bind="checked:toggle1" />
+            <input type="checkbox" bind="checked:toggle2" />
+            <input type="checkbox" bind="checked:toggle3" />
+            <input type="checkbox" bind="checked:toggle4" />
+            <input type="checkbox" bind="checked:toggle5" />
+            <div bind="if:toggle1">Showing 1 Virtual Element</div>
+            <div bind="if:toggle2">Showing 2 Virtual Element</div>
+            <div bind="if:toggle3">Showing 3 Virtual Element</div>
+            <div bind="if:toggle4">Showing 4 Virtual Element</div>
+            <div bind="if:toggle5">Showing 5 Virtual Element</div>
+            <div>
+                <virtual bind="if:toggle1">
+                    <div class="virtual">1 (Virtual)Element</div>
+                </virtual>
+                <div>First Element</div>
+                <virtual bind="if:toggle2">
+                    <div class="virtual">2 (Virtual)Element</div>
+                </virtual>
+                <virtual bind="if:toggle3">
+                    <div class="virtual">3 (Virtual)Element</div>
+                </virtual>
+                <virtual bind="if:toggle4">
+                    <div class="virtual">4 (Virtual)Element</div>
+                </virtual>
+                <div>Third Element</div>
+                <virtual bind="if:toggle5">
+                    <div class="virtual">5 (Virtual)Element</div>
+                </virtual>
+            </div>
+            
+        </template>
+
         <script type="module">
             import MicroBinder from './src2/mb.debug.js'
             var mb = new MicroBinder();
@@ -71,6 +109,11 @@
                         {name:"Lime", types:["Big", "Small"], test:()=>alert(this.name)}
                     ];
                     this.editItem = null;
+                    this.toggle1 = false;
+                    this.toggle2 = false;
+                    this.toggle3 = false;
+                    this.toggle4 = false;
+                    this.toggle5 = false;
                 }
 
                 edit(item){
@@ -98,7 +141,7 @@
                     }
                 }
             }
-            mb.applyBindings(new Person(), document.body, 't1');
+            mb.applyBindings(new Person(), document.body, 't2');
 
             //var dist = mb.build(new Person(), document.body, 't1');
             //debugger;

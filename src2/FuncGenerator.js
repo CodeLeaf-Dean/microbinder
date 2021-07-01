@@ -181,6 +181,7 @@ export default class FuncGenerator  {
         arr.maxDepth = 0;
         arr.push("\nvar $mb = $context.mb;\n");
         arr.push("\nvar t = null;\n"); //, $index = null, $parent = null,$data = null;\n");
+        arr.push("\nvar prev = null;\n"); 
         arr.push("var renderedElements = [];\n");
 
         if(e.toString() === '[object NodeList]'){
@@ -197,7 +198,7 @@ export default class FuncGenerator  {
         }
         arr.push("if($funcElement){\n");
         arr.push("    if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
-        arr.push("    $funcElement.bindArray[$context.$index] = renderedElements;\n");
+        arr.push("    $funcElement.bindArray[$context.$index || 0] = renderedElements;\n");
         arr.push("}\n");
         return arr;
     }
@@ -224,7 +225,11 @@ export default class FuncGenerator  {
         var stop = false;
         if(e.nodeType == 1){
             if(e.nodeName == 'VIRTUAL'){
+                arr.push("prev = ", "n", depth ,";\n");
                 arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createDocumentFragment();\n");
+                arr.push("n", depth ,".prev = prev;\n");
+                arr.push("n", depth ,".parent = ", "n", depth -1, ";\n");
+                arr.push("n", depth ,".getPreviousSibling = function(){return this.prev};\n");
             } else {
                 arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
             }

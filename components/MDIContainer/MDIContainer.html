@@ -6,7 +6,7 @@
     <virtual bind="foreach:panels">
         <virtual bind="component:({name:$data.name, params: $data})"></virtual>
     </virtual>
-    <!-- <virtual bind="if:gridTemplate.showGrid"> -->
+    <virtual bind="if:showGrid">
         <virtual bind="for:gridTemplate.rowCount">
             <virtual bind="for:gridTemplate.columnCount">
                 <div class="debug-area" bind="style:({'grid-column':()=>$index+1,'grid-row':()=>$parentContext.$index+1})">
@@ -14,7 +14,7 @@
                 </div>
             </virtual>
         </virtual>
-    <!-- </virtual> -->
+    </virtual>
 </div>
 
 <div class="debug">

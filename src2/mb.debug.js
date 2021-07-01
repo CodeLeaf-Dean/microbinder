@@ -4,6 +4,7 @@ import FuncGenerator from './FuncGenerator.js'
 import ForBinder from './Binders/ForBinder.js'
 import ForEachBinder from './Binders/ForEachBinder.js'
 import ComponentBinder from './Binders/ComponentBinder.js'
+import IfBinder from './Binders/IfBinder.js'
 
 export default class MicroBinder extends MicroBinderCore {
 
@@ -126,22 +127,7 @@ export default class MicroBinder extends MicroBinderCore {
             click: (e, c, js)=> e.addEventListener("click", (event) => js().call(c.$data, c.$data, event)),
             enter:(e, c, js)=>{e.addEventListener("keypress", (event) => {if(event.keyCode === 13){js()(c.$data, event)}});},
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
-            if: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi];
-                e.$context = c;
-                e._if = false;
-                this.bind(js, (v,o) => {
-                    if(v && !e._if){
-                        var frag = document.createDocumentFragment();
-                        e.insertFunc.call(c.$data, c, frag, e);
-                        e.appendChild(frag);
-                        e._if = true;
-                    } else if(!v && e._if) {
-                        e.innerHTML = "";
-                        e._if = false;
-                    }
-                }, c);
-            },
+            if: IfBinder,
             with: (e, c, js, boi) => {
                 e.insertFunc = this.funcGen.bindObjects[boi];
                 e.$context = c;

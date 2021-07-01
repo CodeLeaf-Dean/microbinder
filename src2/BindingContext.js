@@ -19,4 +19,22 @@ export default class BindingContext{
     set $index(value) {
         this._proxy.$index = value;
     }
+
+    getPreviousElement(e){
+        if(e.getPreviousSibling){
+            var prev = e.getPreviousSibling();
+
+            if(prev && prev.getPreviousSibling){
+                if(!prev.bindArray || prev.bindArray.length == 0 || prev.bindArray[prev.bindArray.length-1].length == 0){
+                    return this.getPreviousElement(prev);
+                } else {
+                    var arr = prev.bindArray[prev.bindArray.length-1];
+                    return arr[arr.length-1];
+                }
+            } else {
+                return prev;
+            }
+
+        }
+    }
 }
