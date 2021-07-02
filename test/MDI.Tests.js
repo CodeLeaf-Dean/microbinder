@@ -201,4 +201,31 @@ export default class MDITests
         mt.Assert(expected, gridTemplate.getAreaString());
     }
 
+    can_remove_first_area(){
+        var gridTemplate = new GridTemplate(`"w1 w2 w2 w2"
+"w4 w4 w4 w5"
+"w12 w12 w12 w5"
+"w12 w12 w12 w13"
+"w7 w7 w8 w8"`, [10,10,10,10],[10,10,10,10]);
+        var expected =  `"w2 w2 w2"
+"w4 w4 w5"
+"w12 w12 w5"
+"w12 w12 w13"
+"w7 w8 w8"`;
+        gridTemplate.removeArea("w1");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
+    can_split_x(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w1 w1 w1 w2 w2 w2 w11"
+"w0 w4 w4 a42 a42 a42 w5 w11"
+"w0 w12 w12 w12 w12 w12 w5 w11"
+"w0 w12 w12 w12 w12 w12 w13 w11"
+"w0 w7 w7 w7 w7 w8 w8 w11"
+"w9 w9 w10 w10 w10 w10 w10 w11"`;
+        gridTemplate.splitX("w4");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
 }

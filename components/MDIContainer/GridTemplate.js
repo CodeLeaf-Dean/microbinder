@@ -5,6 +5,7 @@ export default class GridTemplate{
         this.rowCount = 0;
         this.columnArray = columns;
         this.columnCount = 0;
+        this.lastAreaIndex = 0;
         this.loadAreaString(areaString);
     }
 
@@ -20,6 +21,8 @@ export default class GridTemplate{
             this.areaArray.push.apply(this.areaArray, columns);
             this.columnCount = columns.length;
         });
+
+        this.lastAreaIndex = this.areaArray.length;
     }
 
     getAreaString(){
@@ -208,5 +211,110 @@ export default class GridTemplate{
                 }
             }
         }
+    }
+
+    getAreaWidth(area) {
+        var topLeftIndex = this.areaArray.indexOf(area);
+        var bottomRightIndex = this.areaArray.lastIndexOf(area);
+        var brX = bottomRightIndex % this.columnCount;
+        var tlX = topLeftIndex % this.columnCount;
+
+        var total = 0;
+        for (var index = tlX; index <= brX; index++) {
+            total += this.columnArray[index];
+        }
+        return total;
+    }
+
+    getAreaHeight(area) {
+        var topLeftIndex = this.areaArray.indexOf(area);
+        var bottomRightIndex = this.areaArray.lastIndexOf(area);
+        var brY = Math.floor(bottomRightIndex / this.columnCount);
+        var tlY = Math.floor(topLeftIndex / this.columnCount);
+
+        var total = 0;
+        for (var index = tlY; index <= brY; index++) {
+            total += this.rowArray[index];
+        }
+        return total;
+    }
+
+    splitX(area){
+        var dimentions = this.columnArray;
+        var newAreas = this.areaArray;
+        var newArea = 'a' + this.lastAreaIndex++;
+
+        var panelSize = this.getAreaWidth(area);
+        var halfSize = Math.floor(panelSize / 2);
+
+        var splitDimention = null;
+        var splitSize = null;
+
+        var tlX = this.areaArray.indexOf(area) % this.columnCount;
+        var brX = this.areaArray.lastIndexOf(area) % this.columnCount;
+        var totalSize = 0;
+        while(totalSize < halfSize){
+            totalSize += dimentions[tlX++];
+        }
+        splitDimention = tlX;
+        splitSize = totalSize - halfSize;
+
+        // Insert column after splitDimention
+        this.columnCount += 1;
+        for (let index = 0; index < this.rowCount; index++) {
+            this.areaArray.splice(splitDimention + (index * (this.columnCount)), 0, this.areaArray[splitDimention + (index * (this.columnCount)) - 1]);
+        }
+
+        for (var sY = 0; sY < this.rowCount; sY++) {
+            if (newAreas[(sY * this.columnCount) + splitDimention] == area) {
+                for (var sX = splitDimention; sX <= brX + 1; sX++) {
+                    newAreas[(sY * this.columnCount) + sX] = newArea;
+                }
+            }
+        }
+
+        dimentions[splitDimention-1] -= splitSize;
+        dimentions.splice(splitDimention, 0, splitSize);
+        
+        return newArea;
+    }
+
+    splitY(area){
+        var dimentions = this.rowArray;
+        var newAreas = this.areaArray;
+        var newArea = 'a' + this.lastAreaIndex++;
+
+        var panelSize = this.getAreaHeight(area);
+        var halfSize = Math.floor(panelSize / 2);
+
+        var splitDimention = null;
+        var splitSize = null;
+
+        var brY = Math.floor(this.areaArray.lastIndexOf(area) / this.columnCount);
+        var tlY = Math.floor(this.areaArray.indexOf(area) / this.columnCount);
+        var totalSize = 0;
+        while(totalSize < halfSize){
+            totalSize += dimentions[tlY++];
+        }
+        splitDimention = tlY;
+        splitSize = totalSize - halfSize;
+
+        // Insert row after splitDimention
+        this.rowCount += 1;
+        var args = [splitDimention * this.columnCount, 0].concat(this.areaArray.slice((splitDimention-1) * this.columnCount,(splitDimention * this.columnCount)));
+        Array.prototype.splice.apply(this.areaArray, args);
+
+        for (var sX = 0; sX < this.columnCount; sX++) {
+            if (newAreas[(splitDimention * this.columnCount) + sX] == area) {
+                for (var sY = splitDimention; sY <= brY + 1; sY++) {
+                    newAreas[(sY * this.columnCount) + sX] = newArea;
+                }
+            }
+        }
+
+        dimentions[splitDimention-1] -= splitSize;
+        dimentions.splice(splitDimention, 0, splitSize);
+        
+        return newArea;
     }
 }

@@ -154,12 +154,10 @@ export default class MDIWindow {
     }
 
     splitX() {
-        this.model.root.panels.push(new Panel(this.model.root, this.model.area));
-        this.model.root.splitAreaX(this.model);
+        this.model.root.splitAreaX(this.model.area);
     };
     splitY() {
-        this.model.root.panels.push(new Panel(this.model.root, this.model.area));
-        this.model.root.splitAreaY(this.model);
+        this.model.root.splitAreaY(this.model.area);
     };
 
     close() {
