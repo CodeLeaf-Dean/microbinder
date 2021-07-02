@@ -43,29 +43,31 @@ export default class ArrayHandler extends ObjectHandler {
         });
 
         // Add new elements
-        this._bindElements.forEach((item)=>{
-            var frag = document.createDocumentFragment();
-            var insertFunc = item.insertFunc;
-            //var $context = item.$context;
-            for (let i = startIndex; i < startIndex + pushCount; i++) {
-                const m = proxy[i];
-                insertFunc.call(m, item.$array.childContexts[i], frag, item);
-            }
-            var ba = item.bindArray;
-            if(startIndex == null || startIndex >= ba.length){
-                item.appendChild(frag); 
-            } else {
-                if(startIndex == 0){
-                    // Add to the start of the target
-                    item.prepend(frag);
-                } else {
-                    var ba = item.bindArray[startIndex-1];
-                    var startElement = ba[ba.length-1];
-                    var endElement = startElement.nextSibling;
-                    item.insertBefore(frag, endElement);
+        if(pushCount > 0){
+            this._bindElements.forEach((item)=>{
+                var frag = document.createDocumentFragment();
+                var insertFunc = item.insertFunc;
+                //var $context = item.$context;
+                for (let i = startIndex; i < startIndex + pushCount; i++) {
+                    const m = proxy[i];
+                    insertFunc.call(m, item.$array.childContexts[i], frag, item);
                 }
-            }
-        });
+                var ba = item.bindArray;
+                if(startIndex == null || startIndex >= ba.length){
+                    item.appendChild(frag); 
+                } else {
+                    if(startIndex == 0){
+                        // Add to the start of the target
+                        item.prepend(frag);
+                    } else {
+                        var ba = item.bindArray[startIndex-1];
+                        var startElement = ba[ba.length-1];
+                        var endElement = startElement.nextSibling;
+                        item.insertBefore(frag, endElement);
+                    }
+                }
+            });
+        }
         
         this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, this.parentProxy);
     }

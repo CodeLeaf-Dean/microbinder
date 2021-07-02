@@ -76,4 +76,137 @@ export default class GridTemplate{
         if(apply)this.areaArray = tempArray;
         return true;
     }
+
+    removeArea(area){
+        var topLeftIndex = this.areaArray.indexOf(area);
+        var bottomRightIndex = this.areaArray.lastIndexOf(area);
+        var brX = bottomRightIndex % this.columnCount;
+        var brY = Math.floor(bottomRightIndex / this.columnCount);
+        var tlX = topLeftIndex % this.columnCount;
+        var tlY = Math.floor(topLeftIndex / this.columnCount);
+        var topRightIndex =  topLeftIndex + (brX - tlX);
+        var bottomLeftIndex =  bottomRightIndex - (brX - tlX);
+
+        var fillLeft = tlX > 0;
+        var fillRight = brX < this.columnCount - 1;
+        var fillTop = tlY > 0;
+        var fillBottom = brY < this.rowCount - 1;
+
+        //  Check top left
+        if(tlX > 0 && tlY > 0){
+            var tlmX = this.areaArray[topLeftIndex - 1];
+            var tlmY = this.areaArray[topLeftIndex - this.columnCount];
+            var tlmXY = this.areaArray[topLeftIndex - 1 - this.columnCount];
+            if(tlmXY == tlmX){
+                fillLeft = false;
+            }
+            if(tlmXY == tlmY){
+                fillTop = false;
+            }
+        }
+
+        //  Check bottom left
+        if(tlX > 0 && brY < this.rowCount - 1){
+            var blmX = this.areaArray[bottomLeftIndex - 1];
+            var blpY = this.areaArray[bottomLeftIndex + this.columnCount];
+            var blmXY = this.areaArray[bottomLeftIndex - 1 + this.columnCount];
+            if(blmXY == blmX){
+                fillLeft = false;
+            }
+            if(blmXY == blpY){
+                fillBottom = false;
+            }
+        }
+
+        // Check bottom right
+        if(brX < this.columnCount - 1 && brY < this.rowCount - 1){
+            var brpX = this.areaArray[bottomRightIndex + 1];
+            var brpY = this.areaArray[bottomRightIndex + this.columnCount];
+            var brpXY = this.areaArray[bottomRightIndex + 1 + this.columnCount];
+            if(brpXY == brpX){
+                fillRight = false;
+            }
+            if(brpXY == brpY){
+                fillBottom = false;
+            }
+        }
+
+        // Check top right
+        if(brX < this.columnCount - 1 && tlY > 0){
+            var trpX = this.areaArray[topRightIndex + 1];
+            var trmY = this.areaArray[topRightIndex - this.columnCount];
+            var trpXY = this.areaArray[topRightIndex + 1 - this.columnCount];
+            if(trpXY == trpX){
+                fillRight = false;
+            }
+            if(trpXY == trmY){
+                fillTop = false;
+            }
+        }
+
+        if(fillLeft){
+            // Remove column tlX
+            for (let index = 0; index < this.rowCount; index++) {
+                this.areaArray.splice(tlX + (index * (this.columnCount-1)),1);
+            }
+            this.columnArray[tlX-1] += this.columnArray[tlX];
+            this.columnArray.splice(tlX,1);
+            this.columnCount -= 1;
+
+            for (let index = 0; index < this.areaArray.length; index++) {
+                if(this.areaArray[index] == area){
+                    var col = index % this.columnCount;
+                    var row = Math.floor(index / this.columnCount);
+                    this.areaArray[index] = this.areaArray[(row * this.columnCount) + tlX - 1];
+                }
+            }
+        }
+        else if(fillRight){
+            // Remove column brX
+            for (let index = 0; index < this.rowCount; index++) {
+                this.areaArray.splice(brX + (index * (this.columnCount-1)),1);
+            }
+            this.columnArray[brX+1] += this.columnArray[brX];
+            this.columnArray.splice(brX,1);
+            this.columnCount -= 1;
+
+            for (let index = 0; index < this.areaArray.length; index++) {
+                if(this.areaArray[index] == area){
+                    var col = index % this.columnCount;
+                    var row = Math.floor(index / this.columnCount);
+                    this.areaArray[index] = this.areaArray[(row * this.columnCount) + brX];
+                }
+            }
+        }
+        else if(fillTop){
+            // Remove row tlY
+            this.areaArray.splice(tlY * this.columnCount,this.columnCount);
+            this.rowArray[tlY-1] += this.rowArray[tlY];
+            this.rowArray.splice(tlY,1);
+            this.rowCount -= 1;
+
+            for (let index = 0; index < this.areaArray.length; index++) {
+                if(this.areaArray[index] == area){
+                    var col = index % this.columnCount;
+                    var row = Math.floor(index / this.columnCount);
+                    this.areaArray[index] = this.areaArray[((tlY-1)* this.columnCount) + col];
+                }
+            }
+        }
+        else if(fillBottom){
+            // Remove row brY
+            this.areaArray.splice(brY * this.columnCount,this.columnCount);
+            this.rowArray[brY+1] += this.rowArray[brY];
+            this.rowArray.splice(brY,1);
+            this.rowCount -= 1;
+
+            for (let index = 0; index < this.areaArray.length; index++) {
+                if(this.areaArray[index] == area){
+                    var col = index % this.columnCount;
+                    var row = Math.floor(index / this.columnCount);
+                    this.areaArray[index] = this.areaArray[((brY)* this.columnCount) + col];
+                }
+            }
+        }
+    }
 }

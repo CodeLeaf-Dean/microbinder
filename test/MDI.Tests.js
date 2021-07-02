@@ -143,4 +143,62 @@ export default class MDITests
         mt.Assert(expected, gridTemplate.getAreaString());
     }
 
+    can_remove_area_fill_left(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w1 w1 w1 w1 w11"
+"w0 w4 w4 w4 w5 w11"
+"w0 w12 w12 w12 w5 w11"
+"w0 w12 w12 w12 w13 w11"
+"w0 w7 w7 w8 w8 w11"
+"w9 w9 w10 w10 w10 w11"`;
+        gridTemplate.removeArea("w2");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
+    can_remove_area_fill_right(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w2 w2 w2 w2 w11"
+"w0 w4 w4 w4 w5 w11"
+"w0 w12 w12 w12 w5 w11"
+"w0 w12 w12 w12 w13 w11"
+"w0 w7 w7 w8 w8 w11"
+"w9 w9 w10 w10 w10 w11"`;
+        gridTemplate.removeArea("w1");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
+    can_remove_area_fill_top(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w1 w1 w2 w2 w2 w11"
+"w0 w4 w4 w4 w4 w5 w11"
+"w0 w4 w4 w4 w4 w13 w11"
+"w0 w7 w7 w7 w8 w8 w11"
+"w9 w9 w10 w10 w10 w10 w11"`;
+        gridTemplate.removeArea("w12");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
+    can_remove_area_fill_bottom(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w1 w1 w2 w2 w2 w11"
+"w0 w12 w12 w12 w12 w5 w11"
+"w0 w12 w12 w12 w12 w13 w11"
+"w0 w7 w7 w7 w8 w8 w11"
+"w9 w9 w10 w10 w10 w10 w11"`;
+        gridTemplate.removeArea("w4");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
+    can_remove_area_w8(){
+        var gridTemplate = new GridTemplate(this.startAreaString, [10,10,10,10,10,10], [10,10,10,10,10,10,10]);
+        var expected =  `"w0 w1 w1 w2 w2 w11"
+"w0 w4 w4 w4 w5 w11"
+"w0 w12 w12 w12 w5 w11"
+"w0 w12 w12 w12 w13 w11"
+"w0 w7 w7 w7 w7 w11"
+"w9 w9 w10 w10 w10 w11"`;
+        gridTemplate.removeArea("w8");
+        mt.Assert(expected, gridTemplate.getAreaString());
+    }
+
 }
