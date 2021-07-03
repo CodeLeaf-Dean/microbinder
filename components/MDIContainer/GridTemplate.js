@@ -45,6 +45,21 @@ export default class GridTemplate{
         return Math.floor(index / this.columnCount);
     }
     
+    swap(startIndex, endIndex, iterator, accessor, apply){
+        var tempArray = [...this.areaArray];
+        for (let index = startIndex; index < endIndex; index+=iterator) {
+            if(tempArray[index] == tempArray[index - accessor]){
+                if(tempArray[index - accessor]  != tempArray[index])return false;
+                tempArray[index - accessor] = tempArray[index - accessor - accessor];
+            } else {
+                if(tempArray[index - accessor]  != tempArray[index - accessor - accessor])return false;
+                tempArray[index - accessor] = tempArray[index];
+            }
+        }
+        if(apply)this.areaArray = tempArray;
+        return true;
+    }
+
     swapColumn(columnIndex){
         if(columnIndex <= 1 || columnIndex >= this.columnCount) return;
         return this.swap(columnIndex, this.areaArray.length, this.columnCount, 1, true);
@@ -63,21 +78,6 @@ export default class GridTemplate{
     canSwapRow(rowIndex){
         if(rowIndex <= 1 || rowIndex >= this.rowCount) return;
         return this.swap(rowIndex * this.columnCount, (rowIndex * this.columnCount) + this.columnCount, 1, this.columnCount, false);
-    }
-
-    swap(startIndex, endIndex, iterator, accessor, apply){
-        var tempArray = [...this.areaArray];
-        for (let index = startIndex; index < endIndex; index+=iterator) {
-            if(tempArray[index] == tempArray[index - accessor]){
-                if(tempArray[index - accessor]  != tempArray[index])return false;
-                tempArray[index - accessor] = tempArray[index - accessor - accessor];
-            } else {
-                if(tempArray[index - accessor]  != tempArray[index - accessor - accessor])return false;
-                tempArray[index - accessor] = tempArray[index];
-            }
-        }
-        if(apply)this.areaArray = tempArray;
-        return true;
     }
 
     removeArea(area){

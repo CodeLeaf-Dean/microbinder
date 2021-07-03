@@ -1,20 +1,19 @@
-import BindingContext from './../BindingContext.js'
-
-export default function ForBinder(e, c, js, boi)
+export default function ForBinder(mb, context, readFunc)
 { 
-    e.insertFunc = c.mb.bindObjects[boi];
-    e.$context = c;
-    c.mb.bind(js, (v,o) => {
-        e.insertFunc = c.mb.bindObjects[boi];
-        e.$context = c;
-        //var arr = js.call(c.$data);
-        //e.$array = arr;
-        //e.bindArray = [];
-        //arr._proxyHandler._bindElements.push(e);
+    mb.bind(readFunc, (v,o) => {
+        var element = context.element;
         var frag = document.createDocumentFragment();
-        for (let index = 0; index < v; index++) {
-            e.insertFunc.call(this, new BindingContext(c.mb,c.$data,index,c), frag, e);
+        var diff = v - o;
+        if(diff > 0){
+            for (let index = 0; index < diff; index++) {
+                context.insertFunc.call(this, context.createChildContext(context.$data,index), frag, element);
+            }
         }
-        e.appendChild(frag);
-    }, c);
+        if(diff < 0){
+            for (let i = o-1; i >= v; i--) {
+                context.clearElement(i);
+            }
+        }
+        element.appendChild(frag);
+    }, context);
 }

@@ -20,6 +20,14 @@ export default class BindingContext{
         this._proxy.$index = value;
     }
 
+    createSiblingContext(){
+        return new BindingContext(this.mb, this.$data, this.$index, this.$parentContext);
+    }
+
+    createChildContext(data, index){
+        return new BindingContext(this.mb, data, index, this);
+    }
+
     getPreviousElement(e){
         if(e.getPreviousSibling){
             var prev = e.getPreviousSibling();
@@ -35,6 +43,31 @@ export default class BindingContext{
                 return prev;
             }
 
+        }
+    }
+
+    commitElement(){
+        if(this.element.getPreviousSibling){
+            var previous = this.getPreviousElement(this.element);
+            if(previous == undefined){
+                for (let i = this.element.children.length-1; i >= 0; i--) {
+                    this.element.parent.insertAdjacentElement('afterbegin', this.element.children[i]);
+                }
+            } else {
+                previous.after(this.element);
+            }
+        }
+    }
+
+    clearElement(index){
+        if(this.element.getPreviousSibling){
+            var toRemove = this.element.bindArray[index];
+            for (let i = 0; i < toRemove.length; i++) {
+                toRemove[i].remove();
+            }
+            this.element.bindArray[index] = [];
+        } else {
+            this.element.innerHTML = "";
         }
     }
 }

@@ -182,6 +182,7 @@ export default class FuncGenerator  {
         arr.push("\nvar $mb = $context.mb;\n");
         arr.push("\nvar t = null;\n"); //, $index = null, $parent = null,$data = null;\n");
         arr.push("\nvar prev = null;\n"); 
+        arr.push("\nvar $bindingContext = null;\n"); 
         arr.push("var renderedElements = [];\n");
 
         if(e.toString() === '[object NodeList]'){
@@ -285,7 +286,8 @@ export default class FuncGenerator  {
                             }
                         }
 
-                        arr.push("$mb.executeBinding(n", depth, ", $context, (function(){with($context){with($data??{}){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($context.$data), ", bindObjectIndex, ");\n");
+                        arr.push("$bindingContext = $context.createSiblingContext();\n");
+                        arr.push("$mb.executeBinding(n", depth, ", $bindingContext, (function(){with($bindingContext){with($data??{}){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($bindingContext.$data), ", bindObjectIndex, ");\n");
 
                         if(e.nodeName == 'VIRTUAL'){
                             

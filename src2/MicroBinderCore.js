@@ -54,7 +54,7 @@ export default class MicroBinderCore {
             });
         }
         if(arguments.length < 4){
-            writeFunc(newValue, newValue);
+            writeFunc(newValue, null);
         } else{
             writeFunc(newValue, oldValue);
         }

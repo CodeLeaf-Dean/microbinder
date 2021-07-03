@@ -194,9 +194,16 @@ export default class MicroBinder extends MicroBinderCore {
     }
 
     executeBinding(e, $context, o, boi){
+        e.$context = $context;
+        $context.element = e;
+        $context.insertFunc = this.bindObjects[boi];
         var stopBindingChildren = false;
         for (var p in o) {
-            stopBindingChildren = this.binders[p](e, $context, o[p], boi) | stopBindingChildren;
+            if(p == "foreach" || p == "for" || p == "if"){
+                stopBindingChildren = this.binders[p](this, $context, o[p]) | stopBindingChildren;
+            } else {
+                stopBindingChildren = this.binders[p](e, $context, o[p], boi) | stopBindingChildren;
+            }
         }
     
         return stopBindingChildren;

@@ -123,6 +123,44 @@ class DateHandler extends ObjectHandler {
     }
 }
 
+class BindingContext{
+    constructor(mb, data, index, parentContext) {
+        this.mb = mb;
+        this.$data = data;
+        this.$parentContext = parentContext;
+        this._proxy = new Proxy({$index:index}, new ObjectHandler(mb));
+    }
+
+    get $parent() {
+        return this.$parentContext.$data;
+    }
+
+    get $index() {
+        if(this.mb._calculatingDependancies) this.mb._calculatedDependancies.push({handler: this._proxy.proxyHandler, prop: '$index'});
+        return this._proxy.$index;    }
+    set $index(value) {
+        this._proxy.$index = value;
+    }
+
+    getPreviousElement(e){
+        if(e.getPreviousSibling){
+            var prev = e.getPreviousSibling();
+
+            if(prev && prev.getPreviousSibling){
+                if(!prev.bindArray || prev.bindArray.length == 0 || prev.bindArray[prev.bindArray.length-1].length == 0){
+                    return this.getPreviousElement(prev);
+                } else {
+                    var arr = prev.bindArray[prev.bindArray.length-1];
+                    return arr[arr.length-1];
+                }
+            } else {
+                return prev;
+            }
+
+        }
+    }
+}
+
 class ArrayHandler extends ObjectHandler {
     constructor(mb, prop, proxy) {
         super(mb);
@@ -165,29 +203,31 @@ class ArrayHandler extends ObjectHandler {
         });
 
         // Add new elements
-        this._bindElements.forEach((item)=>{
-            var frag = document.createDocumentFragment();
-            var insertFunc = item.insertFunc;
-            //var $context = item.$context;
-            for (let i = startIndex; i < startIndex + pushCount; i++) {
-                const m = proxy[i];
-                insertFunc.call(m, item.$array.childContexts[i], frag, item);
-            }
-            var ba = item.bindArray;
-            if(startIndex == null || startIndex >= ba.length){
-                item.appendChild(frag); 
-            } else {
-                if(startIndex == 0){
-                    // Add to the start of the target
-                    item.prepend(frag);
-                } else {
-                    var ba = item.bindArray[startIndex-1];
-                    var startElement = ba[ba.length-1];
-                    var endElement = startElement.nextSibling;
-                    item.insertBefore(frag, endElement);
+        if(pushCount > 0){
+            this._bindElements.forEach((item)=>{
+                var frag = document.createDocumentFragment();
+                var insertFunc = item.insertFunc;
+                //var $context = item.$context;
+                for (let i = startIndex; i < startIndex + pushCount; i++) {
+                    const m = proxy[i];
+                    insertFunc.call(m, item.$array.childContexts[i], frag, item);
                 }
-            }
-        });
+                var ba = item.bindArray;
+                if(startIndex == null || startIndex >= ba.length){
+                    item.appendChild(frag); 
+                } else {
+                    if(startIndex == 0){
+                        // Add to the start of the target
+                        item.prepend(frag);
+                    } else {
+                        var ba = item.bindArray[startIndex-1];
+                        var startElement = ba[ba.length-1];
+                        var endElement = startElement.nextSibling;
+                        item.insertBefore(frag, endElement);
+                    }
+                }
+            });
+        }
         
         this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, this.parentProxy);
     }
@@ -261,6 +301,13 @@ class ArrayHandler extends ObjectHandler {
                     return result;
                 }.bind(this);
             }
+            if(prop === 'indexOf') {
+                return function (el) {
+                    arguments[0] = this.mb.unwrap(arguments[0]);
+                    var result = Array.prototype.indexOf.apply(obj, arguments);
+                    return result;
+                }.bind(this);
+            }
     
             return val.bind(proxy);
         }
@@ -300,8 +347,15 @@ class MicroBinderCore {
         if(model._isProxy)
             return model;
 
+        if(model.___proxy != null)
+            return model.___proxy;
+
         var handler = Object.prototype.toString.call(model) === '[object Date]' ? new DateHandler(this) : Array.isArray(model) ? new ArrayHandler(this,null,model) : new ObjectHandler(this);
-        return new Proxy(model, handler);
+        var newProxy = new Proxy(model, handler);
+
+        model.___proxy = newProxy;
+
+        return newProxy;
     }
 
     unwrap(model){
@@ -320,12 +374,14 @@ class MicroBinderCore {
             var bindingId = this._nextBindingId++;
             this._bindings[bindingId] = [];
             this._calculatedDependancies.forEach(x=>{
-                var sub = x.handler._subscribe(x.prop, (n,o)=>{
-                    this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
-                    delete this._bindings[bindingId];
-                    this.bind(readFunc, writeFunc, bindingContext, o);
-                }, readFunc, bindingId);
-                if(sub) this._bindings[bindingId].push(sub);
+                if(x.handler){
+                    var sub = x.handler._subscribe(x.prop, (n,o)=>{
+                        this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
+                        delete this._bindings[bindingId];
+                        this.bind(readFunc, writeFunc, bindingContext, o);
+                    }, readFunc, bindingId);
+                    if(sub) this._bindings[bindingId].push(sub);
+                }
             });
         }
         if(arguments.length < 4){
@@ -334,36 +390,36 @@ class MicroBinderCore {
             writeFunc(newValue, oldValue);
         }
     }
-}
 
-class BindingContext$1{
-    constructor(mb, data, index, parentContext) {
-        this.mb = mb;
-        this.$data = data;
-        this.$parentContext = parentContext;
-        this._proxy = new Proxy({$index:index}, new ObjectHandler(mb));
-    }
+    computed(func, thisContext){
+        var mb = this;
+        var wrappedThis = mb.wrap(thisContext);
+        var temp = mb.wrap({value:undefined});
+        var returnFunc = function(){
+            return temp.value;
+        };
 
-    get $parent() {
-        return this.$parentContext.$data;
-    }
+        mb.bind(
+            (func).bind(wrappedThis), 
+            (function(v){
+                if(temp.value != v){
+                    temp.value = v;
+                }
+            }).bind(wrappedThis)
+        );
 
-    get $index() {
-        if(mb._calculatingDependancies) mb._calculatedDependancies.push({handler: this._proxy.proxyHandler, prop: '$index'});
-        return this._proxy.$index;    }
-    set $index(value) {
-        this._proxy.$index = value;
+        return returnFunc;
     }
 }
 
 class FuncGenerator  {
-    constructor() {
+    constructor(mb) {
         this.defaultBinders = [
             {match:"input[type=text]",binder:"textInput"},
             {match:"ul",binder:"foreach"},
             {match:"button",binder:"click"}
         ];
-        this.subBinders = {if:1,with:1,foreach:1};
+        this.mb = mb;
     }
     
     generateRootInsertFunc(template){
@@ -444,7 +500,7 @@ class FuncGenerator  {
         }
 
         arr.push("\n");
-        arr.push("//# sourceMappingURL=data:text/plain;base64,");
+        //arr.push("//# sourceMappingURL=data:text/plain;base64,");
         
         const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -515,28 +571,20 @@ class FuncGenerator  {
             }
         }
 
-        var sourceMap = 
-        {
-            "version": 3,
-            "sources": [
-                sourceName + ".template"
-            ],
-            "names": [],
-            "mappings": mappings,
-            "sourcesContent": [source]
-        };
+        //arr.push(btoa(JSON.stringify(sourceMap)));
+        //arr.push("\n");
+        //arr.push("//# sourceURL=" + sourceName + ".template.js");
 
-        arr.push(btoa(JSON.stringify(sourceMap)));
-        arr.push("\n");
-        arr.push("//# sourceURL=" + sourceName + ".template.js");
-
-        return new Function('$context,n0,$funcElement', arr.join(''));
+        var f = new Function('$context,n0,$funcElement', arr.join(''));
+        console.log(f);
+        return f;
     }
 
     buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset, nodesExistAlready){
         arr.maxDepth = 0;
-        arr.push("\nvar $mb = this;\n");
+        arr.push("\nvar $mb = $context.mb;\n");
         arr.push("\nvar t = null;\n"); //, $index = null, $parent = null,$data = null;\n");
+        arr.push("\nvar prev = null;\n"); 
         arr.push("var renderedElements = [];\n");
 
         if(e.toString() === '[object NodeList]'){
@@ -553,9 +601,17 @@ class FuncGenerator  {
         }
         arr.push("if($funcElement){\n");
         arr.push("    if(!$funcElement.bindArray)$funcElement.bindArray=[];\n");
-        arr.push("    $funcElement.bindArray[$context.$index] = renderedElements;\n");
+        arr.push("    $funcElement.bindArray[$context.$index || 0] = renderedElements;\n");
         arr.push("}\n");
         return arr;
+    }
+
+    buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj, offset){
+        var arr = [];
+        this.buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
+        var f = new Function('$context,n0,$funcElement', arr.join(''));
+        console.log(f);
+        return f;
     }
 
     executeBindingsFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
@@ -567,7 +623,15 @@ class FuncGenerator  {
     buildInsertFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
         var stop = false;
         if(e.nodeType == 1){
-            arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            if(e.nodeName == 'VIRTUAL'){
+                arr.push("prev = ", "n", depth ,";\n");
+                arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createDocumentFragment();\n");
+                arr.push("n", depth ,".prev = prev;\n");
+                arr.push("n", depth ,".parent = ", "n", depth -1, ";\n");
+                arr.push("n", depth ,".getPreviousSibling = function(){return this.prev};\n");
+            } else {
+                arr.push(depth > arr.maxDepth ? "var " : "", "n", depth ," = document.createElement('", e.nodeName ,"');\n");
+            }
             if(depth > arr.maxDepth)arr.maxDepth = depth;
 
             //arr.push("$context.$element = n", depth ,";\n");
@@ -585,20 +649,20 @@ class FuncGenerator  {
                         }
                         if(!v.startsWith("{")) v = "{" + v + "}";
                         // Wrap all bind attribute object propeties with functions
-                        var fakeContext = {$data:new Proxy(function() {}, new FunctionTester()),$index: ()=>0};
+                        var fakeContext = {$data:new FunctionTester(),$index: ()=>0};
                         var bindObject = new Function("$context", "with($context){with($data){ return " + v + "}}").call(fakeContext.$data, fakeContext);
                         for (const key in bindObject) {
                             v = v.replace(new RegExp(key + "\s*:"), key + ": ()=> ");
                         }
 
                         // check if the bind object has a binder that controls its children
-                        stop = Object.keys(bindObject).some(r=> Object.keys(this.subBinders).indexOf(r) >= 0);
+                        stop = Object.keys(bindObject).some(r=> Object.keys(this.mb.subBinders).indexOf(r) >= 0);
                         var bindObjectIndex = funcIndex;
                         if(stop){
-                            //this.bindObjects.push(this._buildInsertFunc(e.childNodes, this.bindObjects.length + 1));
-                            this.bindObjectCount ++;
-                            bindObjectIndex = this.bindObjectCount;
-                            bindObjectArr[this.bindObjectCount] = { code: ['\n    $mb.bindObjects[',this.bindObjectCount,'] = ', this._buildInsertFunc(bindObjectArr, e.childNodes, this.bindObjectCount, source, mapObj, true), ';\n']};
+                            this.mb.bindObjects.push(this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjects.length + 1));
+                            this.mb.bindObjectCount ++;
+                            bindObjectIndex = this.mb.bindObjectCount;
+                            bindObjectArr[bindObjectIndex] = { code: ['\n    $mb.bindObjects[',this.mb.bindObjectCount,'] = ', this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjectCount, source, mapObj, true), ';\n']};
                         }
                         arr.push("{");
 
@@ -621,15 +685,24 @@ class FuncGenerator  {
                         }
 
                         arr.push("$mb.executeBinding(n", depth, ", $context, (function(){with($context){with($data??{}){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($context.$data), ", bindObjectIndex, ");\n");
-                        arr.push('}');
+
+                        if(e.nodeName == 'VIRTUAL');
+                        arr.push('}\n');
+                    } else if(a == 'class'){
+                        arr.push("n", depth, ".classList.add('", v, "');\n");
                     } else {
                         arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
                     }
                 }
             }
 
-            arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
-            if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
+            if(e.nodeName == 'VIRTUAL'){
+                if(depth-1==0)arr.push("renderedElements.push.apply(renderedElements, Array.from(n", depth, ".childNodes));\n\n");
+                arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+            } else {
+                arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+                if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
+            }
         }
         else if(e.nodeType == 3){
             arr.push("t = document.createTextNode(`", e.nodeValue.replace(/\\/g, "\\\\"), "`);\n");
@@ -649,24 +722,140 @@ class FuncGenerator  {
 }
 
 /// This class is used to create a js object from the binding string so that we can get a list of its used properties. 
-class FunctionTester {
-    has(obj, prop) {return true;}
-    get(obj, prop, proxy) {
+function FunctionTester() {
+    this.has = function(obj, prop) {
+        return true;
+    };
+    this.get = function(obj, prop, proxy) {
         if(prop == Symbol.unscopables) 
             return {};
         if(prop == Symbol.toPrimitive || prop == "toString")
             return ()=>"";
-        return proxy;
+        return new FunctionTester();
+    };
+    this.set = function(obj, prop, val, proxy) {};
+    this.apply = function(obj, thisArg, argumentsList) {
+        return new FunctionTester();
+    };
+
+    return new Proxy(function() {}, this);
+}
+
+function ForBinder(e, c, js, boi)
+{ 
+    e.insertFunc = c.mb.bindObjects[boi];
+    e.$context = c;
+    c.mb.bind(js, (v,o) => {
+        e.insertFunc = c.mb.bindObjects[boi];
+        e.$context = c;
+        //var arr = js.call(c.$data);
+        //e.$array = arr;
+        //e.bindArray = [];
+        //arr._proxyHandler._bindElements.push(e);
+        var frag = document.createDocumentFragment();
+        for (let index = 0; index < v; index++) {
+            e.insertFunc.call(this, new BindingContext(c.mb,c.$data,index,c), frag, e);
+        }
+        e.appendChild(frag);
+    }, c);
+}
+
+function ForEachBinder(e, c, js, boi)
+{ 
+    e.insertFunc = c.mb.bindObjects[boi];
+    e.$context = c;
+    var arr = js.call(c.$data);
+    e.$array = arr;
+    e.bindArray = [];
+    arr._proxyHandler._bindElements.push(e);
+    var frag = document.createDocumentFragment();
+    for (let index = 0; index < arr.length; index++) {
+        const item = arr[index];
+        if(arr.childContexts[index] == null){
+            arr.childContexts[index] = new BindingContext(c.mb,item,index,c);
+        }
+        e.insertFunc.call(item, arr.childContexts[index], frag, e);
     }
-    set(obj, prop, val, proxy) {}
-    apply(obj, thisArg, argumentsList) {return this;}
+    e.appendChild(frag);
+}
+
+function ComponentBinder(e, c, js, boi)
+{ 
+    var jsobj = js();
+    var component = c.mb.components[jsobj.name];
+
+    e.$context = c;
+
+    // insertFuncs for components may be using templates from external files which may not be loaded at the point this is called.
+    // Use a Promise so the component will render when the template is loaded
+    //Promise.resolve(component.insertFunc).then(function(insertFunc) {
+        e.insertFunc = component.insertFunc; //insertFunc || 
+        var frag = document.createDocumentFragment();
+        var model = component.viewModel == null ? c.$data : new component.viewModel(c.mb, jsobj.params);
+
+        model = c.mb.wrap(model);
+
+        var childContext = new BindingContext(c.mb,model,0,c);
+        e.insertFunc.call(model, childContext, frag, e);
+        e.appendChild(frag);
+    //});
+}
+
+function IfBinder(e, c, js, boi)
+{ 
+    e.insertFunc = c.mb.bindObjects[boi];
+    e.$context = c;
+    e._if = false;
+
+    c.mb.bind(js, (v,o) => {
+        if(v && !e._if){
+            var frag = document.createDocumentFragment();
+            e.insertFunc.call(c.$data, c, frag, e);
+
+            e.appendChild(frag);
+
+            if(e.getPreviousSibling){
+                var previous = c.getPreviousElement(e);
+                if(previous == undefined){
+                    for (let i = e.children.length-1; i >= 0; i--) {
+                        e.parent.insertAdjacentElement('afterbegin', e.children[i]);
+                    }
+                } else {
+                    previous.after(e);
+                }
+            }
+
+            e._if = true;
+        } else if(!v && e._if) {
+            if(e.getPreviousSibling){
+                var toRemove = e.bindArray[0];
+                for (let i = 0; i < toRemove.length; i++) {
+                    toRemove[i].remove();
+                }
+                e.bindArray[0] = [];
+            } else {
+                e.innerHTML = "";
+            }
+            e._if = false;
+        }
+    });
 }
 
 class MicroBinder extends MicroBinderCore {
 
     constructor() {
         super();
-        this.funcGen = new FuncGenerator();
+        var self = this;
+        this.components = {
+            register:function(name, componentDescriptor){
+                this[name] = componentDescriptor;
+                this[name].insertFunc = self.build(componentDescriptor.template).then(insertFunc => {
+                    this[name].insertFunc = insertFunc;
+                });
+                return this[name].insertFunc;
+            }
+        };
+        this.funcGen = new FuncGenerator(this);
         this.binders = {
             text:(e, c, js)=>this.bind(js, (v,o) => e.innerText = v, c),
             html:(e, c, js)=>this.bind(js, (v,o) => e.innerHTML = v, c),
@@ -693,8 +882,23 @@ class MicroBinder extends MicroBinderCore {
             css:(e,c,js)=>{
                 // Add a binding for each css class
                 var jsobj = js();
-                for (const key in jsobj) {
-                    this.bind(jsobj[key], (v,o) => v?e.classList.add(key):e.classList.remove(key), c);
+                if(typeof jsobj == "string"){
+                    this.bind(js, (v,o) => {
+                        if(typeof o == "string"){
+                            o.split(' ').forEach(x=>{
+                                if(x != "")
+                                    e.classList.remove(x);
+                            });
+                        }
+                        v.split(' ').forEach(x=>{
+                            if(x != "")
+                                e.classList.add(x);
+                        });
+                    }, c);
+                } else {
+                    for (const key in jsobj) {
+                        this.bind(jsobj[key], (v,o) => v?e.classList.add(key):e.classList.remove(key), c);
+                    }
                 }
             },
             attr:(e,c,js)=>{
@@ -753,53 +957,24 @@ class MicroBinder extends MicroBinderCore {
                 }
             },
             visible: (e, c, js)=> this.bind(js, (v,o) => e.style.display = v ? null : "none", c),
-            click: (e, c, js)=> e.addEventListener("click", (event) => js()(c.$data, event)),
+            click: (e, c, js)=> e.addEventListener("click", (event) => js().call(c.$data, c.$data, event)),
             enter:(e, c, js)=>{e.addEventListener("keypress", (event) => {if(event.keyCode === 13){js()(c.$data, event);}});},
             submit: (e, c, js)=> e.addEventListener("submit", (event) => js()(c.$data, event)),
-            if: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi];
-                e.$context = c;
-                e._if = false;
-                this.bind(js, (v,o) => {
-                    if(v && !e._if){
-                        var frag = document.createDocumentFragment();
-                        e.insertFunc.call(c.$data, c, frag, e);
-                        e.appendChild(frag);
-                        e._if = true;
-                    } else if(!v && e._if) {
-                        e.innerHTML = "";
-                        e._if = false;
-                    }
-                }, c);
-            },
+            if: IfBinder,
             with: (e, c, js, boi) => {
-                e.insertFunc = this.bindObjects[boi];
+                e.insertFunc = this.funcGen.bindObjects[boi];
                 e.$context = c;
                 this.bind(js, (v,o) => {
                     e.innerHTML = "";
                     var frag = document.createDocumentFragment();
                     //e.insertFunc.call(v, v, 0, frag, e, null, v.$parent);
-                    e.insertFunc.call(v, new BindingContext$1(this,v,0,c), frag, e);
+                    e.insertFunc.call(v, new BindingContext(this,v,0,c), frag, e);
                     e.appendChild(frag);
                 }, c);
             },
-            foreach: (e, c, js, boi)=>{ 
-                e.insertFunc = this.bindObjects[boi];
-                e.$context = c;
-                var arr = js.call(c.$data);
-                e.$array = arr;
-                e.bindArray = [];
-                arr.proxyHandler._bindElements.push(e);
-                var frag = document.createDocumentFragment();
-                for (let index = 0; index < arr.length; index++) {
-                    const item = arr[index];
-                    if(arr.childContexts[index] == null){
-                        arr.childContexts[index] = new BindingContext$1(this,item,index,c);
-                    }
-                    e.insertFunc.call(item, arr.childContexts[index], frag, e);
-                }
-                e.appendChild(frag);
-            },
+            for: ForBinder,
+            foreach: ForEachBinder,
+            component: ComponentBinder,
             selectedOptions:(e,c,js)=>{
                 this.bind(js, (v,o) => {
                     var vs = v.map(s=>s.toString());
@@ -815,7 +990,7 @@ class MicroBinder extends MicroBinderCore {
                 var jsobj = js();
                 for (const key in jsobj) {
                     const element = jsobj[key];
-                    e.addEventListener(key, (event) => element.call(c, e));
+                    e.addEventListener(key, (event) => element.call(c.$data, e, event));
                 }
             },
             enable:(e,c,js)=>{
@@ -825,6 +1000,9 @@ class MicroBinder extends MicroBinderCore {
                 this.bind(js, (v,o) => v?e.setAttribute('disabled', ''):e.removeAttribute('disabled'), c);      
             }
         };
+        this.subBinders = {if:1,with:1,foreach:1,for:1};
+        this.bindObjects = [];
+        this.bindObjectCount = -1;
     }
 
     applyBindings(model,rootElement, template){
@@ -843,7 +1021,7 @@ class MicroBinder extends MicroBinderCore {
 
     run(model, target, insertFunc){
         var modelProxy = this.wrap(model);
-        var rootContext = new BindingContext$1(this, modelProxy);
+        var rootContext = new BindingContext(this, modelProxy);
         insertFunc.call(this, rootContext, target);
         return modelProxy;
     }
@@ -868,6 +1046,6 @@ class MicroBinder extends MicroBinderCore {
     }
 }
 
-var mb_debug = new MicroBinder();
+//export default new MicroBinder();
 
-export default mb_debug;
+export default MicroBinder;
