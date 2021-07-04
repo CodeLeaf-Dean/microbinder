@@ -6,6 +6,7 @@ export default class BindingContext{
         this.$data = data;
         this.$parentContext = parentContext;
         this._proxy = new Proxy({$index:index}, new ObjectHandler(mb));
+        this.bindings = [];
     }
 
     get $parent() {
@@ -18,6 +19,12 @@ export default class BindingContext{
     }
     set $index(value) {
         this._proxy.$index = value;
+    }
+
+    bind(readFunc, writeFunc, bindingContext, oldValue, startIndex, deleteCount, pushCount){
+        var binding = this.mb.bind(readFunc, writeFunc, bindingContext, oldValue, startIndex, deleteCount, pushCount);
+        this.bindings.push(binding);
+        return binding;
     }
 
     createSiblingContext(){
@@ -60,14 +67,33 @@ export default class BindingContext{
     }
 
     clearElement(index){
-        if(this.element.getPreviousSibling){
+        if(this.element instanceof DocumentFragment){
             var toRemove = this.element.bindArray[index];
-            for (let i = 0; i < toRemove.length; i++) {
-                toRemove[i].remove();
-            }
-            this.element.bindArray[index] = [];
+            this.clearBindArray(toRemove);
         } else {
             this.element.innerHTML = "";
         }
+    }
+
+    clearBindArray(toRemove){
+        for (let i = 0; i < toRemove.length; i++) {
+            if(toRemove[i] instanceof DocumentFragment){
+                toRemove[i].$context.clearBindings();
+                var br = toRemove[i].bindArray;
+                for (let j = 0; j < br.length; j++) {
+                    this.clearBindArray(br[j]);
+                }
+            } else {
+                toRemove[i].remove();
+            }
+        }
+        toRemove.length = 0;
+    }
+
+    clearBindings(){
+        this.bindings.forEach(binding =>{
+            binding.unbind();
+        });
+        this.bindings = [];
     }
 }

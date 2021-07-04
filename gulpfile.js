@@ -22,7 +22,8 @@ function minify() {
         format: 'esm'
       }
     }))
-    .pipe(terser({ mangle: { properties:{regex: /_.*/ }} }))
+    //.pipe(terser({ mangle: { properties:{regex: /_.*/ }} }))
+    .pipe(terser())
     .pipe(rename('mb.js'))
     .pipe(dest('dist/'));
 };

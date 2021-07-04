@@ -34,30 +34,42 @@ export default class MicroBinderCore {
         return model._proxyObject;
     }
 
-    bind(readFunc, writeFunc, bindingContext, oldValue){
+    bind(readFunc, writeFunc, bindingContext, oldValue, startIndex, deleteCount, pushCount, existingBindingId){
         this._calculatingDependancies = true;
         this._calculatedDependancies = []
         var newValue = readFunc.call(bindingContext == null ? null : bindingContext.$data);
         this._calculatingDependancies = false;
+
+        var bindingId = existingBindingId;
         if(this._calculatedDependancies.length > 0){
-            var bindingId = this._nextBindingId++;
+            if(existingBindingId == null){
+                bindingId = this._nextBindingId++;
+            }
             this._bindings[bindingId] = [];
             this._calculatedDependancies.forEach(x=>{
                 if(x.handler){
-                    var sub = x.handler._subscribe(x.prop, (n,o)=>{
+                    var sub = x.handler._subscribe(x.prop, (n,o,startIndex, deleteCount, pushCount)=>{
                         this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
                         delete this._bindings[bindingId];
-                        this.bind(readFunc, writeFunc, bindingContext, o);
+                        this.bind(readFunc, writeFunc, bindingContext, o, startIndex, deleteCount, pushCount, bindingId);
                     }, readFunc, bindingId);
                     if(sub) this._bindings[bindingId].push(sub);
                 }
             });
         }
-        if(arguments.length < 4){
-            writeFunc(newValue, null);
-        } else{
-            writeFunc(newValue, oldValue);
-        }
+
+        writeFunc(newValue, oldValue, startIndex, deleteCount, pushCount);
+
+        return { 
+            unbind: ()=> {
+                if(this._calculatedDependancies.length > 0){
+                    if(this._bindings[bindingId]){
+                        this._bindings[bindingId].forEach(y=>y._subscription().splice(y._subscription().indexOf(y),1));
+                        delete this._bindings[bindingId]; 
+                    }
+                }
+            }
+        };
     }
 
     computed(func, thisContext){

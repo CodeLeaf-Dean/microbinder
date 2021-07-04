@@ -10,66 +10,13 @@ export default class ArrayHandler extends ObjectHandler {
     }
     
     _handleSplice(startIndex, deleteCount, pushCount, proxy){
-        //Update Proxies
         var newArgs = [];
         newArgs[0] = startIndex;
         newArgs[1] = deleteCount;
         for(let na=0;na<pushCount;na++)newArgs[na+2] = null;
         Array.prototype.splice.apply(this._childProxies, newArgs);
 
-        // Update child contexts
-        if(this._bindElements.length > 0){
-            let element = this._bindElements[0];
-            element.$array.childContexts.splice(startIndex,deleteCount);
-            for (let i = startIndex; i < startIndex + pushCount; i++) {
-                const m = proxy[i];
-                element.$array.childContexts.splice(i,0,new BindingContext(this.mb,m,i,element.$context));
-            }
-            for (let i = startIndex + pushCount; i < element.$array.childContexts.length; i++) {
-                element.$array.childContexts[i].$index = i;
-            }
-        }
-
-        // Remove deleted elements
-        this._bindElements.forEach((element) => {
-            for (let i = 0; i < deleteCount; i++) {
-                element.bindArray[startIndex+i].forEach((node)=>node.remove());
-            }
-            var newArgs = [];
-            newArgs[0] = startIndex;
-            newArgs[1] = deleteCount;
-            for(let na=0;na<pushCount;na++)newArgs[na+2] = [];
-            Array.prototype.splice.apply(element.bindArray, newArgs);
-        });
-
-        // Add new elements
-        if(pushCount > 0){
-            this._bindElements.forEach((item)=>{
-                var frag = document.createDocumentFragment();
-                var insertFunc = item.insertFunc;
-                //var $context = item.$context;
-                for (let i = startIndex; i < startIndex + pushCount; i++) {
-                    const m = proxy[i];
-                    insertFunc.call(m, item.$array.childContexts[i], frag, item);
-                }
-                var ba = item.bindArray;
-                if(startIndex == null || startIndex >= ba.length){
-                    item.appendChild(frag); 
-                } else {
-                    if(startIndex == 0){
-                        // Add to the start of the target
-                        item.prepend(frag);
-                    } else {
-                        var ba = item.bindArray[startIndex-1];
-                        var startElement = ba[ba.length-1];
-                        var endElement = startElement.nextSibling;
-                        item.insertBefore(frag, endElement);
-                    }
-                }
-            });
-        }
-        
-        this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, this.parentProxy);
+        this.parentProxy._proxyHandler._notifySubscribers(this.parentProp, this.parentProxy, this.parentProxy, startIndex, deleteCount, pushCount);
     }
 
     get(obj, prop, proxy) {

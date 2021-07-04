@@ -1,7 +1,7 @@
-export default function IfBinder(mb, context, readFunc)
+export default function IfBinder(context, readFunc)
 { 
     context._if = false;
-    mb.bind(readFunc, (v,o) => {
+    context.bind(readFunc, (v,o) => {
         if(v && !context._if){
             var frag = document.createDocumentFragment();
             context.insertFunc.call(context.$data, context, frag, context.element);

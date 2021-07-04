@@ -22,10 +22,10 @@ export default class ObjectHandler {
         return sub;
     }
 
-    _notifySubscribers(prop, oldValue, newValue){
+    _notifySubscribers(prop, oldValue, newValue, startIndex, deleteCount, pushCount){
         if(this._subscribers[prop] != null){
             for (var i = this._subscribers[prop].length - 1; i >= 0; i--) {
-                this._subscribers[prop][i]._eventFunc(newValue, oldValue);
+                this._subscribers[prop][i]._eventFunc(newValue, oldValue, startIndex, deleteCount, pushCount);
             }
         }
     }

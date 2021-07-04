@@ -200,7 +200,7 @@ export default class MicroBinder extends MicroBinderCore {
         var stopBindingChildren = false;
         for (var p in o) {
             if(p == "foreach" || p == "for" || p == "if"){
-                stopBindingChildren = this.binders[p](this, $context, o[p]) | stopBindingChildren;
+                stopBindingChildren = this.binders[p]($context, o[p]) | stopBindingChildren;
             } else {
                 stopBindingChildren = this.binders[p](e, $context, o[p], boi) | stopBindingChildren;
             }

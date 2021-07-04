@@ -173,7 +173,7 @@ export default class FuncGenerator  {
         //arr.push("//# sourceURL=" + sourceName + ".template.js");
 
         var f = new Function('$context,n0,$funcElement', arr.join(''));
-        console.log(f);
+        //console.log(f);
         return f;
     }
 
@@ -208,7 +208,7 @@ export default class FuncGenerator  {
         var arr = [];
         this.buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
         var f = new Function('$context,n0,$funcElement', arr.join(''));
-        console.log(f);
+        //console.log(f);
         return f;
     }
 
@@ -301,13 +301,13 @@ export default class FuncGenerator  {
                 }
             }
 
-            if(e.nodeName == 'VIRTUAL'){
-                if(depth-1==0)arr.push("renderedElements.push.apply(renderedElements, Array.from(n", depth, ".childNodes));\n\n");
-                arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
-            } else {
+            // if(e.nodeName == 'VIRTUAL'){
+            //     if(depth-1==0)arr.push("renderedElements.push.apply(renderedElements, Array.from(n", depth, ".childNodes));\n\n");
+            //     arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
+            // } else {
                 arr.push("n", depth-1 ,".appendChild(n", depth ,");\n\n");
                 if(depth-1==0)arr.push("renderedElements.push(n", depth, ");\n\n");
-            }
+            //}
         }
         else if(e.nodeType == 3){
             arr.push("t = document.createTextNode(`", e.nodeValue.replace(/\\/g, "\\\\"), "`);\n");

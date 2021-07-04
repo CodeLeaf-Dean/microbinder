@@ -10,7 +10,7 @@ export default class MicroTester {
     Run(tests){
         var success = 0;
         var total = 0;
-        console.group('Running ' + tests.__proto__.constructor.name);
+        console.groupCollapsed('Running ' + tests.__proto__.constructor.name);
         Object.getOwnPropertyNames(tests.__proto__).forEach(prop =>{
             if(prop != "constructor") {
                 this.Assert = this.Assert.bind(prop);
@@ -25,6 +25,10 @@ export default class MicroTester {
             }
         });
         console.groupEnd();
-        console.log(tests.__proto__.constructor.name, 'Results:', success, '/', total, 'tests passed.');
+        if(success == total){
+            console.log('%c ' + tests.__proto__.constructor.name + 'Results: %c ' + success + '/' + total + ' ', '', 'background: forestgreen; color: #FFF; font-weight: bold;border-radius: 4px;');
+        } else {
+            console.log('%c ' + tests.__proto__.constructor.name + 'Results: %c ' + success + '/' + total + ' ', '', 'background: crimson; color: #FFF; font-weight: bold;border-radius: 4px;');
+        }
     }
 }
