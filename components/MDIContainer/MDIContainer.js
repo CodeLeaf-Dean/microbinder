@@ -10,6 +10,8 @@ export default class MDIContainer {
     constructor(mb, params) {
         var self = this;
         this.showGrid = false;
+        this.dropping = false;
+        this.dropArea = '';
         this.gridTemplate = new GridTemplate(`"w0 w1 w1 w2 w2 w2 w11"
             "w0 w4 w4 w4 w4 w5 w11"
             "w0 w12 w12 w12 w12 w5 w11"
@@ -48,6 +50,11 @@ export default class MDIContainer {
         }
         this.removeArea = function (area) {
             this.gridTemplate.removeArea(area);
+        }
+        this.removeAreaIfEmpty = function(area){
+            if(!this.panels.some(x => x.area == area)){
+                this.removeArea(area);
+            }
         }
     }
 }

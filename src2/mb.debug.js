@@ -44,6 +44,23 @@ export default class MicroBinder extends MicroBinderCore {
                 e.addEventListener("focus", (event) => this.setValue(c, js, true));
                 e.addEventListener("blur", (event) => this.setValue(c, js, false));
             },
+            class:(e,c,js)=>{
+                var jsobj = js();
+                this.bind(js, (v,o) => {
+                    if(typeof o == "string"){
+                        o.split(' ').forEach(x=>{
+                            if(x != "")
+                                e.classList.remove(x)
+                        });
+                    } else {
+                        //debugger;
+                    }
+                    v.split(' ').forEach(x=>{
+                        if(x != "")
+                            e.classList.add(x)
+                    });
+                }, c)
+            },
             css:(e,c,js)=>{
                 // Add a binding for each css class
                 var jsobj = js();

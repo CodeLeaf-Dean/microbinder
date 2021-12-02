@@ -18,17 +18,32 @@ export default class MDIWindow {
         this.resizeOffset = 0;
         this.originalColumns = [];
         this.originalRows = [];
+        this.left = 0;
+        this.top = 0;
+        this.width = null;
+        this.height = null;
+        this.startLeft = 0;
+        this.startTop = 0;
+        this.currentEvent = null;
+        this.dragging = false;
     }
 
     handleEvent(e) {
         if (e.type === "mousemove"){
-            if(this.startMouseX != null){
-                return this.mouseMoveX(e);
-            } else {
-                return this.mouseMoveY(e);
+            if(this.currentEvent == 'resizing'){
+                if(this.startMouseX != null){
+                    return this.mouseMoveX(e);
+                } else {
+                    return this.mouseMoveY(e);
+                }
+            } else if(this.currentEvent == 'moving'){
+                return this.headerMouseMove(e);
             }
         } else if(e.type === "mouseup"){
             return this.mouseUp();
+        }
+        else if(e.type === "mouseenter"){
+            debugger;
         }
     }
 
@@ -37,35 +52,56 @@ export default class MDIWindow {
         window.removeEventListener('mouseup', this);
         this.startMouseX = null;
         this.startMouseY = null;
+        this.currentEvent = null;
+        if(this.model.root.dropping == true && this.model.root.dropArea != ''){
+            this.model.area = this.model.root.dropArea;
+        }
+        this.dragging = false;
+        this.model.root.dropping = false;
         document.body.style.cursor = 'auto';
     };
 
+    mouseEnter(e){
+        if(this.model.root.dropping){
+            this.model.root.dropArea = this.model.area;
+        }
+    }
+
+    mouseLeave(e){
+        if(this.model.root.dropping){
+            this.model.root.dropArea = '';
+        }
+    }
+
     mouseDown(m, e) {
-        this.resizeOffset = 0;
-        if (e.offsetY <= 6 && this.handle().startsWith('t')) {
-            this.originalRows = [...this.model.root.gridTemplate.rowArray];
-            this.rowBeingSized = this.model.root.gridTemplate.getAreaRowIndex(this.model.area);
-            this.startSize = this.model.root.gridTemplate.rowArray[this.rowBeingSized-1];
-            this.startMouseY = e.clientY;
-            window.addEventListener('mousemove', this);
-            window.addEventListener('mouseup', this);
-            document.body.style.cursor = 'ns-resize';
+        if(e.target == e.currentTarget){
+            this.currentEvent = 'resizing';
+            this.resizeOffset = 0;
+            if (e.offsetY <= MARGIN_SIZE && this.handle().startsWith('t')) {
+                this.originalRows = [...this.model.root.gridTemplate.rowArray];
+                this.rowBeingSized = this.model.root.gridTemplate.getAreaRowIndex(this.model.area);
+                this.startSize = this.model.root.gridTemplate.rowArray[this.rowBeingSized-1];
+                this.startMouseY = e.clientY;
+                window.addEventListener('mousemove', this);
+                window.addEventListener('mouseup', this);
+                document.body.style.cursor = 'ns-resize';
+            }
+            else if (e.offsetX <= MARGIN_SIZE && this.handle().endsWith('l')) {
+                this.originalColumns = [...this.model.root.gridTemplate.columnArray];
+                this.columnBeingSized = this.model.root.gridTemplate.getAreaColumnIndex(this.model.area);
+                this.startSize = this.model.root.gridTemplate.columnArray[this.columnBeingSized-1];
+                this.startMouseX = e.clientX;
+                window.addEventListener('mousemove', this, false);
+                window.addEventListener('mouseup', this, false);
+                document.body.style.cursor = 'ew-resize';
+            }
+            
+            if(e.stopPropagation) e.stopPropagation();
+            if(e.preventDefault) e.preventDefault();
+            e.cancelBubble=true;
+            e.returnValue=false;
+            return false;
         }
-        else if (e.offsetX <= 6 && this.handle().endsWith('l')) {
-            this.originalColumns = [...this.model.root.gridTemplate.columnArray];
-            this.columnBeingSized = this.model.root.gridTemplate.getAreaColumnIndex(this.model.area);
-            this.startSize = this.model.root.gridTemplate.columnArray[this.columnBeingSized-1];
-            this.startMouseX = e.clientX;
-            window.addEventListener('mousemove', this, false);
-            window.addEventListener('mouseup', this, false);
-            document.body.style.cursor = 'ew-resize';
-        }
-        
-        if(e.stopPropagation) e.stopPropagation();
-        if(e.preventDefault) e.preventDefault();
-        e.cancelBubble=true;
-        e.returnValue=false;
-        return false;
     }
 
     mouseMoveX (e) {
@@ -159,6 +195,44 @@ export default class MDIWindow {
     splitY() {
         this.model.root.splitAreaY(this.model.area);
     };
+
+    headerMouseDown(m, e){
+        var rect = e.target.parentElement.getBoundingClientRect();
+        var style = getComputedStyle(e.target.parentElement);
+        this.top = rect.top;
+        this.left = rect.left;
+        this.width = rect.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth);
+        this.height = rect.height - parseInt(style.borderTopWidth) - parseInt(style.borderBottomWidth);
+        if(this.model.area != ""){
+            this.width -= parseInt(style.paddingLeft);
+            this.height -= parseInt(style.paddingTop);
+            var currentArea = this.model.area;
+            this.model.area = "";
+            this.model.root.removeAreaIfEmpty(currentArea);
+        }
+        
+        this.startLeft = this.left;
+        this.startTop = this.top;
+        this.startMouseX = e.clientX;
+        this.startMouseY = e.clientY;
+        this.currentEvent = 'moving';
+        window.addEventListener('mousemove', this);
+        window.addEventListener('mouseup', this);
+        document.body.style.cursor = 'grabbing';
+        this.dragging = true;
+        this.model.root.dropping = true;
+
+        if(e.stopPropagation) e.stopPropagation();
+        if(e.preventDefault) e.preventDefault();
+        e.cancelBubble=true;
+        e.returnValue=false;
+        return false;
+    }
+
+    headerMouseMove(e){
+        this.left = this.startLeft + e.clientX - this.startMouseX;
+        this.top = this.startTop + e.clientY - this.startMouseY;
+    }
 
     close() {
         var index = this.model.root.panels.indexOf(this.model);

@@ -1,4 +1,16 @@
-<div class="full-panel" bind="css:handle(),style:({'grid-area': ()=>model.area}),event:({mousedown:mouseDown})">
+<div class="full-panel" bind="
+class:handle(),
+css:({floating: ()=>model.area=='', dragging: ()=>dragging}),
+style:({
+    'grid-area': ()=>model.area, 
+    left:()=>model.area != '' ? null : left + 'px', 
+    top:()=>model.area != '' ? null : top + 'px', 
+    width:()=>model.area != '' ? null : width + 'px', 
+    height:()=>model.area != '' ? null : height + 'px'
+}),
+event:({mousedown:mouseDown,mouseenter:mouseEnter,mouseleave:mouseLeave})
+">
+    <div class="panel-header" bind=event:({mousedown:headerMouseDown})>Header</div>
     <span bind="text:model.area"></span>
     <span bind="text:handle()"></span>
     <br/>

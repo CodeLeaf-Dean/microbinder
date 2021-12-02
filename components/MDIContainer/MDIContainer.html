@@ -6,6 +6,9 @@
     <virtual bind="foreach:panels">
         <virtual bind="component:({name:$data.name, params: $data})"></virtual>
     </virtual>
+    <virtual bind="if:dropping">
+        <div class="drop-area" bind="style:({'grid-area':()=>dropArea}),visible:dropArea != ''"></div>
+    </virtual>
     <virtual bind="if:showGrid">
         <virtual bind="for:gridTemplate.rowCount">
             <virtual bind="for:gridTemplate.columnCount">
