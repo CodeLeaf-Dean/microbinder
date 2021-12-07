@@ -56,5 +56,10 @@ export default class MDIContainer {
                 this.removeArea(area);
             }
         }
+
+        this.dropAreaHandle = mb.computed(function () {
+            var result = this.gridTemplate.getAreaRowIndex(this.dropArea) > 0 ? 't' : '';
+            return this.gridTemplate.getAreaColumnIndex(this.dropArea) > 0 ? result + ' l' : result;
+        }, this);
     }
 }

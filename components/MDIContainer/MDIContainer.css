@@ -1,12 +1,14 @@
 .mdi {
     display: grid;
-    width: 100vw;
-    height: 100vh;
+    /* width: 100vw;
+    height: 100vh; */
 }
 
 .mdi{
     font-family: segoe ui; /*, Consolas, 'Courier New', monospace;*/
     font-size: 12px;
+    border: 1px solid lightgrey;
+    background: grey;
 }
 
 .full-panel{
@@ -46,6 +48,12 @@
     cursor: ns-resize;
 }
 
+.dropping .full-panel.l:before,
+.dropping .full-panel.t:after,
+.dropping .panel-header{
+    cursor: unset;
+}
+
 .debug {
     position: absolute;
     top: 0;
@@ -72,13 +80,28 @@
 
 .panel-header{
     background: whitesmoke;
+    cursor: default;
 }
 
 .full-panel.floating{
     position: absolute;
     z-index: 2;
-    box-shadow: 1px 1px 6px 0px #0006;
+    padding: 6px;
+    box-shadow: none;
+    border: none;
+    background: none;;
+}
+
+.full-panel.floating>.full-panel-frame{
+    box-shadow: 1px 1px 6px 0px #0006; 
     border: 3px solid whitesmoke;
+    background: white;
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    overflow: hidden;
 }
 
 .full-panel.dragging{
@@ -89,4 +112,12 @@
     background: #2196f375;
     pointer-events: none;
     z-index: 1;
+}
+
+.drop-area.l{
+    margin-left:6px;
+}
+
+.drop-area.t{
+    margin-top:6px;
 }

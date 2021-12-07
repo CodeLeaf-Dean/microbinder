@@ -8,14 +8,18 @@ style:({
     width:()=>model.area != '' ? null : width + 'px', 
     height:()=>model.area != '' ? null : height + 'px'
 }),
-event:({mousedown:mouseDown,mouseenter:mouseEnter,mouseleave:mouseLeave})
+event:({mousedown:mouseDown,mouseenter:mouseEnter,mouseleave:mouseLeave,mousemove:mouseMove})
 ">
-    <div class="panel-header" bind=event:({mousedown:headerMouseDown})>Header</div>
-    <span bind="text:model.area"></span>
-    <span bind="text:handle()"></span>
-    <br/>
-    
-    <button bind="click:splitX">SplitX</button>
-    <button bind="click:splitY">SplitY</button>
-    <button bind="click:close">Close</button>
+    <div class="full-panel-frame">
+        <div class="panel-header" bind=event:({mousedown:headerMouseDown})>Header</div>
+        <div class="panel-content">
+            <span bind="text:model.area"></span>
+            <span bind="text:handle()"></span>
+            <br/>
+            
+            <button bind="click:splitX">SplitX</button>
+            <button bind="click:splitY">SplitY</button>
+            <button bind="click:close">Close</button>
+        </div>
+    </div>
 </div>

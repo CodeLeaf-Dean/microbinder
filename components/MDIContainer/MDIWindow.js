@@ -24,18 +24,21 @@ export default class MDIWindow {
         this.height = null;
         this.startLeft = 0;
         this.startTop = 0;
+        this.startWidth = 0;
+        this.startHeight = 0;
         this.currentEvent = null;
+        this.currentOperation = null;
         this.dragging = false;
     }
 
     handleEvent(e) {
         if (e.type === "mousemove"){
-            if(this.currentEvent == 'resizing'){
-                if(this.startMouseX != null){
-                    return this.mouseMoveX(e);
-                } else {
-                    return this.mouseMoveY(e);
-                }
+            if(this.currentEvent == 'resizingX'){
+                return this.mouseResizeX(e);
+            } else if(this.currentEvent == 'resizingY'){
+                return this.mouseResizeY(e);
+            } else if(this.currentEvent == 'resizing'){
+                return this.mouseResize(e);
             } else if(this.currentEvent == 'moving'){
                 return this.headerMouseMove(e);
             }
@@ -70,30 +73,48 @@ export default class MDIWindow {
     mouseLeave(e){
         if(this.model.root.dropping){
             this.model.root.dropArea = '';
+        } else if(this.currentEvent == null) {
+            document.body.style.cursor = 'auto';
         }
     }
 
     mouseDown(m, e) {
-        if(e.target == e.currentTarget){
-            this.currentEvent = 'resizing';
-            this.resizeOffset = 0;
-            if (e.offsetY <= MARGIN_SIZE && this.handle().startsWith('t')) {
-                this.originalRows = [...this.model.root.gridTemplate.rowArray];
-                this.rowBeingSized = this.model.root.gridTemplate.getAreaRowIndex(this.model.area);
-                this.startSize = this.model.root.gridTemplate.rowArray[this.rowBeingSized-1];
+        if((e.target == e.currentTarget || e.target.parentElement == e.currentTarget)){
+            // If we are a floating window
+            if(this.model.area == ""){
+                this.currentEvent = 'resizing';
+                this.currentOperation = "";
+                this.startLeft = this.left;
+                this.startTop = this.top;
+                this.startWidth = this.width;
+                this.startHeight = this.height;
+                this.startMouseX = e.clientX;
                 this.startMouseY = e.clientY;
+                this.currentOperation = this.getResizeOperationFromMousePosition(e);
                 window.addEventListener('mousemove', this);
                 window.addEventListener('mouseup', this);
-                document.body.style.cursor = 'ns-resize';
-            }
-            else if (e.offsetX <= MARGIN_SIZE && this.handle().endsWith('l')) {
-                this.originalColumns = [...this.model.root.gridTemplate.columnArray];
-                this.columnBeingSized = this.model.root.gridTemplate.getAreaColumnIndex(this.model.area);
-                this.startSize = this.model.root.gridTemplate.columnArray[this.columnBeingSized-1];
-                this.startMouseX = e.clientX;
-                window.addEventListener('mousemove', this, false);
-                window.addEventListener('mouseup', this, false);
-                document.body.style.cursor = 'ew-resize';
+            } else {
+                this.resizeOffset = 0;
+                if (e.offsetY <= MARGIN_SIZE && this.handle().startsWith('t')) {
+                    this.currentEvent = 'resizingY';
+                    this.originalRows = [...this.model.root.gridTemplate.rowArray];
+                    this.rowBeingSized = this.model.root.gridTemplate.getAreaRowIndex(this.model.area);
+                    this.startSize = this.model.root.gridTemplate.rowArray[this.rowBeingSized-1];
+                    this.startMouseY = e.clientY;
+                    window.addEventListener('mousemove', this);
+                    window.addEventListener('mouseup', this);
+                    document.body.style.cursor = 'ns-resize';
+                }
+                else if (e.offsetX <= MARGIN_SIZE && this.handle().endsWith('l')) {
+                    this.currentEvent = 'resizingX';
+                    this.originalColumns = [...this.model.root.gridTemplate.columnArray];
+                    this.columnBeingSized = this.model.root.gridTemplate.getAreaColumnIndex(this.model.area);
+                    this.startSize = this.model.root.gridTemplate.columnArray[this.columnBeingSized-1];
+                    this.startMouseX = e.clientX;
+                    window.addEventListener('mousemove', this, false);
+                    window.addEventListener('mouseup', this, false);
+                    document.body.style.cursor = 'ew-resize';
+                }
             }
             
             if(e.stopPropagation) e.stopPropagation();
@@ -104,7 +125,7 @@ export default class MDIWindow {
         }
     }
 
-    mouseMoveX (e) {
+    mouseResizeX(e) {
         var newColumns = this.model.root.gridTemplate.columnArray;
         var newSize = this.startSize + this.resizeOffset + e.clientX - this.startMouseX;
         var oldSize = newColumns[this.columnBeingSized - 1];
@@ -146,7 +167,7 @@ export default class MDIWindow {
             newColumns[this.columnBeingSized] = newSizeB;
         }
     }
-    mouseMoveY(e) {
+    mouseResizeY(e) {
         var newRows = this.model.root.gridTemplate.rowArray;
         var newSize = this.startSize + e.clientY - this.startMouseY;
         var oldSize = newRows[this.rowBeingSized - 1];
@@ -188,6 +209,25 @@ export default class MDIWindow {
             newRows[this.rowBeingSized] = newSizeB;
         }
     }
+    mouseResize(e){
+        var newX = this.startLeft + e.clientX - this.startMouseX;
+        var newY = this.startTop + e.clientY - this.startMouseY;
+
+        if(this.currentOperation.endsWith('w')){
+        	this.left = newX;
+            this.width = this.startWidth + this.startLeft - newX;
+        }
+        if(this.currentOperation.endsWith('e')){
+        	this.width = this.startWidth + newX - this.startLeft;
+        }
+        if(this.currentOperation.startsWith('n')){
+        	this.top = newY;
+            this.height = this.startHeight + this.startTop - newY;
+        }
+        if(this.currentOperation.startsWith('s')){
+        	this.height = this.startHeight + newY - this.startTop;
+        }
+    }
 
     splitX() {
         this.model.root.splitAreaX(this.model.area);
@@ -197,18 +237,22 @@ export default class MDIWindow {
     };
 
     headerMouseDown(m, e){
-        var rect = e.target.parentElement.getBoundingClientRect();
-        var style = getComputedStyle(e.target.parentElement);
+        var rect = e.target.parentElement.parentElement.getBoundingClientRect();
+        var style = getComputedStyle(e.target.parentElement.parentElement);
         this.top = rect.top;
         this.left = rect.left;
-        this.width = rect.width - parseInt(style.borderLeftWidth) - parseInt(style.borderRightWidth);
-        this.height = rect.height - parseInt(style.borderTopWidth) - parseInt(style.borderBottomWidth);
+        this.width = rect.width; //- parseInt(style.paddingLeft) - parseInt(style.paddingRight);
+        this.height = rect.height; // - parseInt(style.paddingTop) - parseInt(style.paddingBottom);
+
         if(this.model.area != ""){
-            this.width -= parseInt(style.paddingLeft);
-            this.height -= parseInt(style.paddingTop);
+            this.left -= 3;
+            this.top -= 3;
             var currentArea = this.model.area;
             this.model.area = "";
             this.model.root.removeAreaIfEmpty(currentArea);
+        } else {
+            this.width -= parseInt(style.paddingLeft) + parseInt(style.paddingRight);
+            this.height -= parseInt(style.paddingTop) + parseInt(style.paddingBottom);
         }
         
         this.startLeft = this.left;
@@ -232,6 +276,55 @@ export default class MDIWindow {
     headerMouseMove(e){
         this.left = this.startLeft + e.clientX - this.startMouseX;
         this.top = this.startTop + e.clientY - this.startMouseY;
+    }
+
+    mouseMove(m, e){
+        if(this.model.area == "" && this.currentEvent == null){
+            this.frameMouseMove(e);
+        }
+    }
+
+    getResizeOperationFromMousePosition(e){
+        var currentMarginSize = MARGIN_SIZE;
+        if(e.target.parentElement == e.currentTarget){
+            currentMarginSize = 3;
+        }
+
+        var rect = e.target.getBoundingClientRect();
+        var operation = "";
+        if (e.layerY <= currentMarginSize) {
+            operation = "n";
+        } else if (e.layerY >= rect.height - currentMarginSize) {
+            operation = "s";
+        }
+        
+        if (e.layerX <= currentMarginSize) {
+            operation += "w";
+        } else if (e.layerX >= rect.width - currentMarginSize) {
+            operation += "e";
+        }
+
+        return operation;
+    }
+
+    frameMouseMove(e){
+        if((e.target == e.currentTarget || e.target.parentElement == e.currentTarget) && !this.model.root.dropping){
+            var operation = this.getResizeOperationFromMousePosition(e);
+            
+            if(operation == 'n' || operation == 's'){
+                document.body.style.cursor = 'ns-resize';
+            } else if(operation == 'e' || operation == 'w'){
+                document.body.style.cursor = 'ew-resize';
+            } else if(operation == 'ne' || operation == 'sw'){
+                document.body.style.cursor = 'nesw-resize';
+            } else if(operation == 'se' || operation == 'nw'){
+                document.body.style.cursor = 'nwse-resize';
+            } else {
+                document.body.style.cursor = 'auto';
+            }
+        } else {
+            document.body.style.cursor = 'auto';
+        }
     }
 
     close() {

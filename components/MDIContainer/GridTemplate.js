@@ -82,6 +82,7 @@ export default class GridTemplate{
 
     removeArea(area){
         var topLeftIndex = this.areaArray.indexOf(area);
+        if(topLeftIndex == -1) return;
         var bottomRightIndex = this.areaArray.lastIndexOf(area);
         var brX = bottomRightIndex % this.columnCount;
         var brY = Math.floor(bottomRightIndex / this.columnCount);
@@ -226,6 +227,10 @@ export default class GridTemplate{
         return total;
     }
 
+    getTotalWidth() {
+        return this.columnArray.reduce((a, b) => a + b, 0);
+    }
+
     getAreaHeight(area) {
         var topLeftIndex = this.areaArray.indexOf(area);
         var bottomRightIndex = this.areaArray.lastIndexOf(area);
@@ -237,6 +242,10 @@ export default class GridTemplate{
             total += this.rowArray[index];
         }
         return total;
+    }
+
+    getTotalHeight(){
+        return this.rowArray.reduce((a, b) => a + b, 0);
     }
 
     splitX(area){
