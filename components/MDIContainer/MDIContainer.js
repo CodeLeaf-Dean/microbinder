@@ -12,6 +12,7 @@ export default class MDIContainer {
         this.showGrid = false;
         this.dropping = false;
         this.dropArea = '';
+        this.dropAreaPosition = '';
         this.gridTemplate = new GridTemplate(`"w0 w1 w1 w2 w2 w2 w11"
             "w0 w4 w4 w4 w4 w5 w11"
             "w0 w12 w12 w12 w12 w5 w11"
@@ -59,7 +60,9 @@ export default class MDIContainer {
 
         this.dropAreaHandle = mb.computed(function () {
             var result = this.gridTemplate.getAreaRowIndex(this.dropArea) > 0 ? 't' : '';
-            return this.gridTemplate.getAreaColumnIndex(this.dropArea) > 0 ? result + ' l' : result;
+            result = this.gridTemplate.getAreaColumnIndex(this.dropArea) > 0 ? result + ' l' : result;
+            result += ' ' + this.dropAreaPosition;
+            return result;
         }, this);
     }
 }

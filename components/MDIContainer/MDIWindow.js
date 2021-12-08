@@ -278,8 +278,33 @@ export default class MDIWindow {
         this.top = this.startTop + e.clientY - this.startMouseY;
     }
 
+    dropAreaMouseMove(e){
+        var rect = e.currentTarget.getBoundingClientRect();
+        var halfWidth = rect.width / 2;
+        var halfHeight = rect.height / 2;
+        var aspectRatio = rect.height / rect.width;
+        var recenteredX = (e.layerX-halfWidth)*aspectRatio;
+        var recenteredY = e.layerY-halfHeight;
+        var fillX = (rect.width / 6)*aspectRatio;
+        var fillY = (rect.height / 6);
+
+        if(recenteredX>Math.abs(recenteredY) && recenteredX > fillX){
+            this.model.root.dropAreaPosition = 'endX';
+        } else if(-recenteredX>Math.abs(recenteredY) && -recenteredX > fillX){
+            this.model.root.dropAreaPosition = 'startX';
+        } else if(recenteredY>Math.abs(recenteredX) && recenteredY > fillY){
+            this.model.root.dropAreaPosition = 'endY';
+        } else if(-recenteredY>Math.abs(recenteredX) && -recenteredY > fillY){
+            this.model.root.dropAreaPosition = 'startY';
+        } else {
+            this.model.root.dropAreaPosition = 'fill';
+        }
+    }
+
     mouseMove(m, e){
-        if(this.model.area == "" && this.currentEvent == null){
+        if(this.model.root.dropping){
+            this.dropAreaMouseMove(e);
+        } else if(this.model.area == "" && this.currentEvent == null){
             this.frameMouseMove(e);
         }
     }

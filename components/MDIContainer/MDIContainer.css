@@ -89,7 +89,7 @@
     padding: 6px;
     box-shadow: none;
     border: none;
-    background: none;;
+    background: none;
 }
 
 .full-panel.floating>.full-panel-frame{
@@ -106,6 +106,7 @@
 
 .full-panel.dragging{
     pointer-events: none;
+    opacity: 0.75;
 }
 
 .drop-area{
@@ -120,4 +121,32 @@
 
 .drop-area.t{
     margin-top:6px;
+}
+
+.drop-area.startX{
+    width: 50%;
+}
+
+.drop-area.endX{
+    width: 50%;
+    justify-self: end;
+}
+
+.drop-area.l.startX,
+.drop-area.l.endX{
+    width: calc(50% - 3px);
+}
+
+.drop-area.startY{
+    height: 50%;
+}
+
+.drop-area.endY{
+    height: 50%;
+    align-self: end;
+}
+
+.drop-area.t.startY,
+.drop-area.t.endY{
+    height: calc(50% - 3px);
 }
