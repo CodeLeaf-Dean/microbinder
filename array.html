@@ -26,8 +26,9 @@
                     <div bind="{if:!($parent.editItem != null && $data == $parent.editItem)}">
                         <span type=text bind="{text: $index + ': '}"></span>
                         <span bind=name></span>
-                        <button bind="()=>test()">Test</button>
+                        <button bind="()=>{ test();}">Test</button>
                         <button bind="()=>alert(name)">Alert Name</button>
+                        <button bind="click:()=>alert(name),text:name">Alert Name</button>
                         <button bind="()=>$parent.edit(this)">Edit</button>
                         <button bind="()=>$parent.moveUp(this)">/\</button>
                         <button bind="()=>$parent.moveDown(this)">\/</button>

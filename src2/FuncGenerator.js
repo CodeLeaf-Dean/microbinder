@@ -1,3 +1,5 @@
+import SourceMapGenerator from './SourceMap/SourceMapGenerator.js'
+
 export default class FuncGenerator  {
     constructor(mb) {
         this.defaultBinders = [
@@ -49,7 +51,7 @@ export default class FuncGenerator  {
 
     buildInsertFuncWithSourceMap(e, sourceName, nodesExistAlready){
         var source;
-        var mapObj = {root:[],offset:[]};
+        var mapObj = {root:[],offset:[],maps:[]};
         if(e.toString() === '[object NodeList]'){
             source = Array.prototype.reduce.call(e, function(html, node) {
                 return html + ( node.outerHTML || node.nodeValue );
@@ -64,113 +66,45 @@ export default class FuncGenerator  {
         else {
             var temp = document.createElement('div');
             temp.appendChild( e.cloneNode(true) );
-            source = temp.innerHTML;
+            source = temp.innerHTML.replace(/&amp;/g, "&");
         }
         
         var arr = [];
         var bindObjectArr = [];
         
+        this.mb.bindObjectCount ++;
         this.buildInsertFuncBody(arr, bindObjectArr, e, 0, source, mapObj, nodesExistAlready);
 
+        var map = new SourceMapGenerator({
+            file: sourceName + ".template.map"
+        });
         
-        var lineOffset = arr.join('').match(/\n/g).length + 3;
-        mapObj.root.length = lineOffset;
+        map.setSourceContent(sourceName + ".template.map", source);
 
-        for (let i = 0; i < bindObjectArr.length; i++) {
-            const element = bindObjectArr[i];
-            arr.push("// Offset: ", lineOffset);
-            if(mapObj.offset[i] == undefined)mapObj.offset[i] = [];
-            mapObj.offset[i].length = (element.code.join('').match(/\n/g)||[]).length;
-            lineOffset += mapObj.offset[i].length;
-            arr = arr.concat(element.code);
+        for (let i = 0; i < mapObj.maps.length; i++) {
+            var m = mapObj.maps[i];
+            map.addMapping({
+                generated: {
+                    line: m.newLine,
+                    column: m.newColumn
+                },
+                source: sourceName + ".template.map",
+                original: {
+                    line: m.originalLine,
+                    column: m.originalColumn
+                },
+                name: m.name
+            });
         }
 
         arr.push("\n");
-        //arr.push("//# sourceMappingURL=data:text/plain;base64,");
+        arr.push("//# sourceMappingURL=data:text/plain;base64,");
+        arr.push(btoa(map.toString()));
+        arr.push("\n");
+
+        arr.push("//# sourceURL=" + sourceName + ".template.js");
+        arr.push("\n");
         
-        const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-        const BIT_MASKS = {
-            LEAST_FOUR_BITS: 0b1111,
-            LEAST_FIVE_BITS: 0b11111,
-            CONTINUATION_BIT: 0b100000,
-            SIGN_BIT: 0b1,
-        };
-
-        function base64VlqEncode(integers) {
-            return integers
-                .map(vlqEncode)
-                .map(base64Encode)
-                .join('');
-        }
-
-        function vlqEncode(x) {
-            if (x === 0) {
-                return [0];
-            }
-            let absX = Math.abs(x);
-            const sextets = [];
-            while (absX > 0) {
-                let sextet = 0;
-                if (sextets.length === 0) {
-                sextet = x < 0 ? 1 : 0; // set the sign bit
-                sextet |= (absX & BIT_MASKS.LEAST_FOUR_BITS) << 1; // shift one ot make space for sign bit
-                absX >>>= 4;
-                } else {
-                sextet = absX & BIT_MASKS.LEAST_FIVE_BITS;
-                absX >>>= 5;
-                }
-                if (absX > 0) {
-                sextet |= BIT_MASKS.CONTINUATION_BIT;
-                }
-                sextets.push(sextet);
-            }
-            return sextets;
-        }
-
-        function base64Encode(vlq) {
-            return vlq.map(s => BASE64_ALPHABET[s]).join('');
-        }
-
-        var mappings = "";
-        var pos = 0;
-        for (let i = 0; i < mapObj.root.length; i++) {
-            const element = mapObj.root[i];
-            if(element != undefined){
-                var diff = element - pos;
-                mappings = mappings + base64VlqEncode([0,0,diff,0]);
-                pos += diff;
-            }
-            mappings = mappings + ";"
-        }
-
-        for (let i = 0; i < mapObj.offset.length; i++) {
-            const maps = mapObj.offset[i];
-            for (let j = 0; j < maps.length; j++) {
-                const element = maps[j];
-                if(element != undefined){
-                    var diff = element - pos;
-                    mappings = mappings + base64VlqEncode([0,0,diff,0]);
-                    pos += diff;
-                }
-                mappings = mappings + ";"
-            }
-        }
-
-        var sourceMap = 
-        {
-            "version": 3,
-            "sources": [
-                sourceName + ".template"
-            ],
-            "names": [],
-            "mappings": mappings,
-            "sourcesContent": [source]
-        };
-
-        //arr.push(btoa(JSON.stringify(sourceMap)));
-        //arr.push("\n");
-        //arr.push("//# sourceURL=" + sourceName + ".template.js");
 
         var f = new Function('$context,n0,$funcElement', arr.join(''));
         //console.log(f);
@@ -202,14 +136,6 @@ export default class FuncGenerator  {
         arr.push("    $funcElement.bindArray[$context.$index || 0] = renderedElements;\n");
         arr.push("}\n");
         return arr;
-    }
-
-    buildInsertFunc(bindObjectArr, e, funcIndex, source, mapObj, offset){
-        var arr = [];
-        this.buildInsertFuncBody(arr, bindObjectArr, e, funcIndex, source, mapObj, offset);
-        var f = new Function('$context,n0,$funcElement', arr.join(''));
-        //console.log(f);
-        return f;
     }
 
     executeBindingsFuncVisit(e, arr, bindObjectArr, depth, funcIndex, source, mapObj, offset){
@@ -261,34 +187,49 @@ export default class FuncGenerator  {
                         stop = Object.keys(bindObject).some(r=> Object.keys(this.mb.subBinders).indexOf(r) >= 0);
                         var bindObjectIndex = funcIndex;
                         if(stop){
-                            this.mb.bindObjects.push(this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjects.length + 1));
-                            this.mb.bindObjectCount ++;
+                            this.mb.bindObjectCount++;
                             bindObjectIndex = this.mb.bindObjectCount;
-                            bindObjectArr[bindObjectIndex] = { code: ['\n    $mb.bindObjects[',this.mb.bindObjectCount,'] = ', this.buildInsertFunc(bindObjectArr, e.childNodes, this.mb.bindObjectCount, source, mapObj, true), ';\n']};
+                            arr.push("$mb.bindObjects[" + bindObjectIndex + "] = (function anonymous($context,n0,$funcElement) {");
+                            this.buildInsertFuncBody(arr, bindObjectArr, e.childNodes, bindObjectIndex, source, mapObj, offset);
+                            arr.push("})\n");
+                            arr.push("// ========================");
+                            arr.push("\n");
                         }
                         arr.push("{");
 
-                        var sourceLine = 0;
-                        var targetLine = 0;
+                        var debugMapping = "";
                         if(source){
-                            // Get the line number for this element
-                            var contentBefore = source.substr(0, source.indexOf(e.outerHTML))
-                            targetLine = (contentBefore.match(/\n/g)||[]).length;
-                            sourceLine = arr.join('').match(/\n/g).length + 3;// TODO: Perf
-                            
-                            if(offset){
-                                if(mapObj.offset[funcIndex] == undefined){
-                                    mapObj.offset[funcIndex] = [];
+                            var eOuterHTML = e.outerHTML.replace(/&amp;/g, "&");
+                            for (const key in bindObject) {
+                                var newMatch = v.match(new RegExp(key + "\s*:"));
+  
+                                var newLine = 0;
+                                var newColumn = 8 + newMatch.index + key.length + 6;
+                                var originalLine = 0;
+                                var orignalColumn = 0;
+
+                                // Get the line number for this element
+                                var contentBefore = source.substr(0, source.indexOf(eOuterHTML));
+                                originalLine = (contentBefore.match(/\n/g)||[]).length + 1;
+
+                                newLine = arr.join('').match(/\n/g).length + 5;// TODO: Perf
+
+                                var contentOnLineBeforeElementStart = contentBefore.split('\n').slice(-1)[0].length;
+                                var indexInElementTag = eOuterHTML.indexOf("bind=") + 6;
+                                orignalColumn = contentOnLineBeforeElementStart + indexInElementTag;
+
+                                var orignalMatch = eOuterHTML.match(new RegExp(key + "\s*:"));
+                                if(orignalMatch){
+                                    orignalColumn = contentOnLineBeforeElementStart + orignalMatch.index + key.length + 1;
                                 }
-                                mapObj.offset[funcIndex][sourceLine] = targetLine;
-                            } else {
-                                mapObj.root[sourceLine] = targetLine;
+
+                                mapObj.maps.push({newLine: newLine, newColumn: newColumn, originalLine: originalLine, originalColumn: orignalColumn, name: key});
+                                debugMapping = debugMapping + "line: " + newLine + ", column: " + newColumn + ", originalline: " + originalLine + ", orignalColumn: " + orignalColumn;
                             }
                         }
 
                         arr.push("$bindingContext = $context.createSiblingContext();\n");
-                        arr.push("$mb.executeBinding(n", depth, ", $bindingContext, (function(){with($bindingContext){with($data??{}){\nreturn ",v,"// line: ",sourceLine, ", offset: ", offset,", src: ", targetLine,"\n}}}).call($bindingContext.$data), ", bindObjectIndex, ");\n");
-
+                        arr.push("$mb.executeBinding(n", depth, ", $bindingContext, (function(){with($bindingContext){with($data??{}){\nreturn ",v,"// " + debugMapping,"\n}}}).call($bindingContext.$data), ", bindObjectIndex, ");\n");
                         if(e.nodeName == 'VIRTUAL'){
                             
                         }
