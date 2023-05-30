@@ -1,5 +1,5 @@
 import MicroTester from '../MicroTester.js'
-import MicroBinder from '../../src2/mb.debug.js'
+import {MicroBinder} from '../../src2/mb.debug.js'
 import BindingContext from '../../src2/BindingContext.js'
 
 var mt = new MicroTester();
