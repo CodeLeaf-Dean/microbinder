@@ -4,9 +4,15 @@
     'grid-template-columns':()=>gridTemplateColumns(),
     width: ()=>gridTemplate.getTotalWidth() + 'px',
     height: ()=>gridTemplate.getTotalHeight() + 'px'
-    }), css:({dropping:()=>dropping})">
+    }), 
+    css:({dropping:()=>dropping})">
     <virtual bind="foreach:panels">
         <virtual bind="component:({name:$data.name, params: $data})"></virtual>
+    </virtual>
+    <virtual bind="if:emptyArea() != null">
+        <div class="full-panel empty-panel" bind="style:({'grid-area':()=>emptyArea()}),event:({mouseenter:mouseEnter,mouseleave:mouseLeave,mousemove:mouseMove})">
+            EMPTY AREA
+        </div>
     </virtual>
     <virtual bind="if:dropping">
         <div class="drop-area" bind="class:dropAreaHandle(), style:({'grid-area':()=>dropArea}),visible:dropArea != ''"></div>
