@@ -48,6 +48,10 @@
     cursor: ns-resize;
 }
 
+.empty-panel{
+    background:transparent;
+}
+
 .dropping .full-panel.l:before,
 .dropping .full-panel.t:after,
 .dropping .panel-header{

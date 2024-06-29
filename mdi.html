@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <link href="data:image/x-icon;base64,AAABAAEAEBAQAAAAAAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAEhEQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA" rel="icon" type="image/x-icon" />
         <meta charset="utf-8"/>
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
         <link id="mdicontainer-template" href="/components/MDIContainer/MDIContainer.html" rel="preload" as="fetch" crossorigin="anonymous" />
         <link id="mdiwindow-template" href="/components/MDIContainer/MDIWindow.html" rel="preload" as="fetch" crossorigin="anonymous" />
         <link rel="stylesheet" href="/components/MDIContainer/MDIContainer.css">
@@ -20,11 +20,10 @@ body {
             <virtual bind="component:({'name':'mdi-container', params: $data})"></virtual>
         </template>
         <script type="module">
-            import MicroBinder from './src2/mb.debug.js'
+            import mb from './src2/mb.debug.js'
             import MDIContainer from './components/MDIContainer/MDIContainer.js'
             import MDIWindow from './components/MDIContainer/MDIWindow.js'
-            var mb = new MicroBinder();
-
+            
             await mb.components.register('mdi-window', {template:'mdiwindow-template', viewModel: MDIWindow});
             await mb.components.register('mdi-container', {template:'mdicontainer-template', viewModel: MDIContainer});
 

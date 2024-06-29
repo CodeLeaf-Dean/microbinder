@@ -6,7 +6,7 @@ import ForEachBinder from './Binders/ForEachBinder.js'
 import ComponentBinder from './Binders/ComponentBinder.js'
 import IfBinder from './Binders/IfBinder.js'
 
-export default class MicroBinder extends MicroBinderCore {
+export class MicroBinder extends MicroBinderCore {
 
     constructor() {
         super();
@@ -237,4 +237,4 @@ export default class MicroBinder extends MicroBinderCore {
     }
 }
 
-//export default new MicroBinder();
+export default new MicroBinder();

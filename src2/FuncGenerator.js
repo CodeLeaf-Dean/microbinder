@@ -75,6 +75,7 @@ export default class FuncGenerator  {
         this.mb.bindObjectCount ++;
         this.buildInsertFuncBody(arr, bindObjectArr, e, 0, source, mapObj, nodesExistAlready);
 
+        /*
         var map = new SourceMapGenerator({
             file: sourceName + ".template.map"
         });
@@ -104,7 +105,7 @@ export default class FuncGenerator  {
 
         arr.push("//# sourceURL=" + sourceName + ".template.js");
         arr.push("\n");
-        
+        */
 
         var f = new Function('$context,n0,$funcElement', arr.join(''));
         //console.log(f);
@@ -235,7 +236,7 @@ export default class FuncGenerator  {
                         }
                         arr.push('}\n');
                     } else if(a == 'class'){
-                        arr.push("n", depth, ".classList.add('", v, "');\n");
+                        arr.push("n", depth, ".classList.add('", v.split(' ').join("','"), "');\n");
                     } else {
                         arr.push("n", depth, ".setAttribute('", a, "', '", v, "');\n");
                     }

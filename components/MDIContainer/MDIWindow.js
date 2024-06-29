@@ -57,7 +57,25 @@ export default class MDIWindow {
         this.startMouseY = null;
         this.currentEvent = null;
         if(this.model.root.dropping == true && this.model.root.dropArea != ''){
-            this.model.area = this.model.root.dropArea;
+            if(this.model.root.dropAreaPosition == 'endX'){
+                var newArea = this.model.root.gridTemplate.splitX(this.model.root.dropArea);
+                this.model.area = newArea;
+            } else if(this.model.root.dropAreaPosition == 'startX'){
+                var newArea = this.model.root.gridTemplate.splitX(this.model.root.dropArea);
+                var currentPanel = this.model.root.panels.find(p => p.area == this.model.root.dropArea);
+                if(currentPanel != null)currentPanel.area = newArea;
+                this.model.area = this.model.root.dropArea;
+            } else if(this.model.root.dropAreaPosition == 'endY'){
+                var newArea = this.model.root.gridTemplate.splitY(this.model.root.dropArea);
+                this.model.area = newArea;
+            } else if(this.model.root.dropAreaPosition == 'startY'){
+                var newArea = this.model.root.gridTemplate.splitY(this.model.root.dropArea);
+                var currentPanel = this.model.root.panels.find(p => p.area == this.model.root.dropArea);
+                if(currentPanel != null)currentPanel.area = newArea;
+                this.model.area = this.model.root.dropArea;
+            } else {
+                this.model.area = this.model.root.dropArea;
+            }
         }
         this.dragging = false;
         this.model.root.dropping = false;

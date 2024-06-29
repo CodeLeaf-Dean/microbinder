@@ -64,5 +64,61 @@ export default class MDIContainer {
             result += ' ' + this.dropAreaPosition;
             return result;
         }, this);
+
+        this.emptyArea = mb.computed(function () {
+            var areas = [...this.gridTemplate.areaArray];
+
+            for (let index = 0; index < this.gridTemplate.areaArray.length; index++) {
+                const element = this.gridTemplate.areaArray[index];
+                if(this.panels.find(p => p.area == element) != null){
+                    delete areas[index];
+                }
+            }
+            
+            return areas.find(a => a != null);
+        }, this);
+    }
+
+    mouseEnter(e){
+        if(this.dropping){
+            this.dropArea = this.emptyArea();
+            this.dropAreaPosition = 'fill';
+        }
+    }
+
+    mouseLeave(e){
+        if(this.dropping){
+            this.dropArea = '';
+        }
+    }
+
+    mouseMove(m, e){
+        if(this.dropping){
+            this.dropArea = this.emptyArea();
+            this.dropAreaMouseMove(e);
+        }
+    }
+
+    dropAreaMouseMove(e){
+        var rect = e.currentTarget.getBoundingClientRect();
+        var halfWidth = rect.width / 2;
+        var halfHeight = rect.height / 2;
+        var aspectRatio = rect.height / rect.width;
+        var recenteredX = (e.layerX-halfWidth)*aspectRatio;
+        var recenteredY = e.layerY-halfHeight;
+        var fillX = (rect.width / 6)*aspectRatio;
+        var fillY = (rect.height / 6);
+
+        if(recenteredX>Math.abs(recenteredY) && recenteredX > fillX){
+            this.dropAreaPosition = 'endX';
+        } else if(-recenteredX>Math.abs(recenteredY) && -recenteredX > fillX){
+            this.dropAreaPosition = 'startX';
+        } else if(recenteredY>Math.abs(recenteredX) && recenteredY > fillY){
+            this.dropAreaPosition = 'endY';
+        } else if(-recenteredY>Math.abs(recenteredX) && -recenteredY > fillY){
+            this.dropAreaPosition = 'startY';
+        } else {
+            this.dropAreaPosition = 'fill';
+        }
     }
 }
