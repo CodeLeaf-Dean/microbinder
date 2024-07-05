@@ -67,9 +67,12 @@ export default class BindingContext{
     }
 
     clearElement(index){
-        if(this.element instanceof DocumentFragment){
+        if(this.element.bindArray != null){ //} instanceof DocumentFragment){
             var toRemove = this.element.bindArray[index];
-            this.clearBindArray(toRemove);
+            if(toRemove != undefined) {
+                this.clearBindArray(toRemove);
+                delete this.element.bindArray[index];
+            }
         } else {
             this.element.innerHTML = "";
         }

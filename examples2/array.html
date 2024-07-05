@@ -6,6 +6,8 @@
     </head>
     <body>
         <template id="t1">
+            <button bind="add">Add</button>
+
             <ul bind=fruit>
                 <li>
                     <span bind="$index"></span>
@@ -43,21 +45,29 @@
             </ul>
         </template>
         <script type="module">
-            import MicroBinder from './src2/mb.debug.js'
+            import MicroBinder from '/src2/mb.debug.js'
             var mb = new MicroBinder();
 
             class Person {
                 constructor() {
                     this.firstName = 'Micro';
                     this.lastName = 'Binder';
-                    this.fruit = [
-                        {name:"Apple", types:["Pink Lady","Gala","Granny Smith"], test:function(){alert(this.name)}},
-                        {name:"Pear", types:["Confrence","Golden"], test:()=>alert(this.name)},
-                        {name:"Lemon", types:["Big", "Small"], test:()=>alert(this.name)},
-                        {name:"Lime", types:["Big", "Small"], test:()=>alert(this.name)}
-                    ];
+                    this.fruit = [];
+                    //     {name:"Apple", types:["Pink Lady","Gala","Granny Smith"], test:function(){alert(this.name)}},
+                    //     {name:"Pear", types:["Confrence","Golden"], test:()=>alert(this.name)},
+                    //     {name:"Lemon", types:["Big", "Small"], test:()=>alert(this.name)},
+                    //     {name:"Lime", types:["Big", "Small"], test:()=>alert(this.name)}
+                    // ];
                     this.editItem = null;
                 }
+
+add(){
+    var newFruit = {name:"Bananana", types:["Cavendish","Cavendish"], test:()=>alert(this.name)};
+    //this.fruit.push(newFruit);
+    this.fruit[1] = newFruit;
+
+    this.fruit[4] = {name:"Something", types:["Cavendish","Cavendish"], test:()=>alert(this.name)};
+}
 
                 edit(item){
                     this.editItem = item;
@@ -67,7 +77,8 @@
                 }
                 delete(item){
                     var index = this.fruit.indexOf(item);
-                    this.fruit.splice(index, 1);
+                    //this.fruit.splice(index, 1);
+                    delete this.fruit[index];
                 }
                 moveUp(item){
                     var index = this.fruit.indexOf(item);

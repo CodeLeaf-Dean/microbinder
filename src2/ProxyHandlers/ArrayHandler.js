@@ -33,7 +33,7 @@ export default class ArrayHandler extends ObjectHandler {
                     if(startIndex<0)startIndex = obj.length + startIndex + 1;
                     var deleteCount = arguments.length == 1 ? obj.length - startIndex : arguments[1];
                     if(deleteCount > obj.length - startIndex)deleteCount = obj.length - startIndex;
-                    var result = Array.prototype.splice.apply(obj, arguments);
+                    var result = Array.prototype.splice.apply(obj, [...arguments].map((x,i) => i < 2 ? x : x._isProxy == true ? x._proxyObject : x));
                     this._handleSplice(startIndex, deleteCount, arguments.length - 2, proxy);
                     return result;
                 }.bind(this);
@@ -117,5 +117,13 @@ export default class ArrayHandler extends ObjectHandler {
             }
         }
         return result;
+    }
+
+    deleteProperty(obj, prop) {
+        if (prop in obj) {
+          delete obj[prop];
+          this._handleSplice(parseInt(prop), 1, 0, obj);
+          return true;
+        }
     }
 }
